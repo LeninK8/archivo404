@@ -9,24 +9,15 @@ import {
     getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ─── CREDENCIALES FIREBASE (solo Firestore, sin Storage) ──
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// ─── CREDENCIALES FIREBASE ────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyBMRggkr4F3hCshprZx8tBU-gtRw6ZEZTE",
-  authDomain: "archivo404.firebaseapp.com",
-  projectId: "archivo404",
-  storageBucket: "archivo404.firebasestorage.app",
-  messagingSenderId: "325717064494",
-  appId: "1:325717064494:web:088dc7851a5be86dc5d8bf"
+    apiKey:            "AIzaSyBMRggkr4F3hCshprZx8tBU-gtRw6ZEZTE",
+    authDomain:        "archivo404.firebaseapp.com",
+    projectId:         "archivo404",
+    storageBucket:     "archivo404.firebasestorage.app",
+    messagingSenderId: "325717064494",
+    appId:             "1:325717064494:web:088dc7851a5be86dc5d8bf"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 // ──────────────────────────────────────────────────────────
 
 // ─── CREDENCIALES CLOUDINARY ──────────────────────────────
@@ -104,7 +95,7 @@ export function storageUpload(path, file, onProgress) {
 }
 
 // ══════════════════════════════════════════════════════════
-//  CLOUDINARY — eliminar (se hace desde el dashboard)
+//  CLOUDINARY — eliminar (se gestiona desde el dashboard)
 // ══════════════════════════════════════════════════════════
 
 export async function storageDelete(path) {
@@ -125,5 +116,3 @@ export async function testConnection() {
 }
 
 export { db };
-
-export { db, storage };

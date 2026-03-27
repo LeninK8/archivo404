@@ -24,7 +24,7 @@ let meta = JSON.parse(localStorage.getItem('404_meta')) || {
     vids:  {},
     auds:  {},
     cmds: {
-        "ayuda":    { res: "creador | boveda | galeria | audio | notas | objetivos | clear | error | estado | hora | fecha | version | sys | matrix | hack | ping | quien | musica | purgar | centinela" },
+        "ayuda":    { res: "creador | boveda | galeria | audio | stream | notas | objetivos | clear | error | estado | hora | fecha | version | sys | matrix | hack | ping | quien | musica | purgar | centinela" },
         "estado":   { res: "[OK] TODOS LOS SECTORES EN LÍNEA." },
         "hora":     { res: "__hora__" },
         "fecha":    { res: "__fecha__" },
@@ -189,13 +189,14 @@ function execCmd(q) {
         "boveda":    () => openWin('w-files'),
         "galeria":   () => openGallery(),
         "audio":     () => openWin('w-audio'),
+        "stream":    () => openWin('w-stream'),
         "notas":     () => openWin('w-notes'),
         "objetivos": () => openWin('w-tasks'),
         "clear":     () => { document.getElementById('output-stream').innerHTML=''; },
         "centinela": () => toggleSentinel(),
         "error":     () => {
             document.getElementById('panic-layer').style.display='flex';
-            setTimeout(()=> window.location.href='https://www.google.com', 2500);
+            setTimeout(()=> window.location.href='vacio.html', 2500);
         }
     };
 
@@ -732,7 +733,7 @@ function startSentinelTimer() {
     setInterval(()=>{
         if (!sentinelActive) return;
         idleTime++;
-        if (idleTime >= 60) { window.location.replace('about:blank'); return; }
+        if (idleTime >= 60) { window.location.replace('https://www.youtube.com'); return; }
         const s = (idleTime%60).toString().padStart(2,'0');
         document.getElementById('uptime').textContent = `SENTINEL: 00:${s}`;
     }, 1000);
@@ -741,7 +742,7 @@ function startSentinelTimer() {
 function panicAbort() {
     document.getElementById('panic-layer').style.display = 'flex';
     log('[!] PROTOCOLO DE PÁNICO ACTIVADO.', 'cmd');
-    setTimeout(()=> window.location.replace('about:blank'), 800);
+    setTimeout(()=> window.location.replace('https://www.youtube.com'), 800);
 }
 
 // ─── UTILIDADES ──────────────────────────────────────────────
@@ -775,3 +776,144 @@ window.panicAbort       = panicAbort;
 
 // ─── INICIO ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', boot);
+
+// ═══════════════════════════════════════════════════════════
+//  STREAM — PANEL DE VIDEO URL (agregado)
+// ═══════════════════════════════════════════════════════════
+
+let streamPanels = [];
+const MAX_STREAMS = 10;
+
+function getEmbedUrl(rawUrl) {
+    try {
+        const url = new URL(rawUrl.trim());
+
+        // YouTube watch
+        if (url.hostname.includes('youtube.com') && url.searchParams.get('v')) {
+            return `https://www.youtube.com/embed/${url.searchParams.get('v')}?autoplay=1`;
+        }
+        // YouTube short
+        if (url.hostname.includes('youtu.be')) {
+            return `https://www.youtube.com/embed${url.pathname}?autoplay=1`;
+        }
+        // YouTube live / channel → redirige a watch directo
+        if (url.hostname.includes('youtube.com') && url.pathname.includes('/live')) {
+            const parts = url.pathname.split('/');
+            const id = parts[parts.indexOf('live') + 1] || '';
+            return `https://www.youtube.com/embed/${id}?autoplay=1`;
+        }
+        // Twitch
+        if (url.hostname.includes('twitch.tv')) {
+            const parts = url.pathname.split('/').filter(Boolean);
+            const channel = parts[0];
+            return `https://player.twitch.tv/?channel=${channel}&parent=${location.hostname}&autoplay=true`;
+        }
+        // Cualquier otra URL — intentar embed directo con iframe
+        return rawUrl.trim();
+    } catch(e) {
+        return rawUrl.trim();
+    }
+}
+
+function addStreamPanel() {
+    if (streamPanels.length >= MAX_STREAMS) {
+        log(`LÍMITE ALCANZADO: máximo ${MAX_STREAMS} streams simultáneos.`, 'warn');
+        return;
+    }
+
+    const rawUrl = document.getElementById('stream-url-input').value.trim();
+    const label  = document.getElementById('stream-label-input').value.trim() || `STREAM ${streamPanels.length + 1}`;
+
+    if (!rawUrl) {
+        log('ERROR: INGRESA UNA URL VÁLIDA.', 'warn');
+        return;
+    }
+
+    const id = 'sp_' + Date.now();
+    streamPanels.push({ id, rawUrl, label });
+
+    document.getElementById('stream-url-input').value = '';
+    document.getElementById('stream-label-input').value = '';
+
+    renderStreamGrid();
+    log(`STREAM AGREGADO: ${label}`, 'ok');
+}
+
+function removeStreamPanel(id) {
+    streamPanels = streamPanels.filter(p => p.id !== id);
+    renderStreamGrid();
+    log('STREAM REMOVIDO.', 'cmd');
+}
+
+function clearAllPanels() {
+    streamPanels = [];
+    renderStreamGrid();
+    log('TODOS LOS STREAMS CERRADOS.', 'cmd');
+}
+
+function renderStreamGrid() {
+    const grid  = document.getElementById('stream-grid');
+    const empty = document.getElementById('stream-empty');
+    const count = document.getElementById('stream-count');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    count.textContent = `${streamPanels.length} / ${MAX_STREAMS} STREAMS`;
+
+    if (streamPanels.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    streamPanels.forEach(p => {
+        const embedUrl = getEmbedUrl(p.rawUrl);
+        const panel = document.createElement('div');
+        panel.id = p.id;
+        panel.style.cssText = `
+            position:relative;
+            background:#0a0a0a;
+            border:1px solid #222;
+            border-radius:6px;
+            overflow:hidden;
+            display:flex;
+            flex-direction:column;
+            min-height:220px;
+        `;
+
+        panel.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:#111;border-bottom:1px solid #222;">
+                <span style="color:#555;font-size:0.6rem;letter-spacing:0.1em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80%;">📺 ${p.label}</span>
+                <button onclick="removeStreamPanel('${p.id}')" style="background:transparent;color:#ff003c;border:none;cursor:pointer;font-size:0.9rem;padding:0 4px;line-height:1;">×</button>
+            </div>
+            <iframe
+                src="${embedUrl}"
+                style="flex:1;width:100%;min-height:200px;border:none;"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                loading="lazy">
+            </iframe>
+        `;
+
+        grid.appendChild(panel);
+    });
+}
+
+// ── Comando stream en terminal ──
+const _origExecCmd = window.execCmd || null;
+
+// Parchamos execCmd para agregar los nuevos comandos
+const _oldExecCmd = execCmd;
+window.execCmd = function(q) { _oldExecCmd(q); };
+
+// Exponemos funciones del stream
+window.addStreamPanel   = addStreamPanel;
+window.removeStreamPanel = removeStreamPanel;
+window.clearAllPanels   = clearAllPanels;
+
+// Enter en input de URL
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('stream-url-input')?.addEventListener('keypress', e => {
+        if (e.key === 'Enter') addStreamPanel();
+    });
+});

@@ -12,14 +12,23 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // ─── TUS CREDENCIALES AQUÍ ───────────────────────────────
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey:            "REEMPLAZA_CON_TU_API_KEY",
-    authDomain:        "REEMPLAZA.firebaseapp.com",
-    projectId:         "REEMPLAZA_CON_TU_PROJECT_ID",
-    storageBucket:     "REEMPLAZA.appspot.com",
-    messagingSenderId: "REEMPLAZA",
-    appId:             "REEMPLAZA"
+  apiKey: "AIzaSyBMRggkr4F3hCshprZx8tBU-gtRw6ZEZTE",
+  authDomain: "archivo404.firebaseapp.com",
+  projectId: "archivo404",
+  storageBucket: "archivo404.firebasestorage.app",
+  messagingSenderId: "325717064494",
+  appId: "1:325717064494:web:088dc7851a5be86dc5d8bf"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 // ─────────────────────────────────────────────────────────
 
 const app      = initializeApp(firebaseConfig);

@@ -62,6 +62,9 @@
     <div class="side-item" onclick="openWin('w-audio')">
         <span class="side-icon">🎵</span><span class="side-label">FRECUENCIAS</span>
     </div>
+    <div class="side-item" onclick="openWin('w-stream')">
+        <span class="side-icon">📺</span><span class="side-label">STREAM</span>
+    </div>
     <div class="side-item" onclick="openWin('w-notes')">
         <span class="side-icon">📝</span><span class="side-label">BITÁCORA</span>
     </div>
@@ -144,12 +147,10 @@
         </div>
     </div>
     <div class="win-body gallery-body">
-        <!-- FOTOS -->
         <div class="gallery-section">
             <div class="gallery-section-title">📷 IMÁGENES</div>
             <div id="gallery-photos" class="gallery-grid"></div>
         </div>
-        <!-- VIDEOS -->
         <div class="gallery-section">
             <div class="gallery-section-title">🎬 VIDEOS</div>
             <div id="gallery-videos" class="gallery-grid"></div>
@@ -169,6 +170,43 @@
             <audio id="audio-player" controls></audio>
         </div>
         <div id="audio-list" class="audio-list"></div>
+    </div>
+</div>
+
+<!-- ═══ PANEL STREAM DE VIDEO ═══ -->
+<div id="w-stream" class="win" style="top:3%;left:5%;width:1100px;height:680px;">
+    <div class="win-head">
+        <div class="win-head-left"><span class="win-icon">📺</span><span class="win-title">STREAM — MONITOR DE VIDEO</span></div>
+        <div class="win-controls">
+            <button class="win-btn close" onclick="closeWin('w-stream')"></button>
+        </div>
+    </div>
+    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;padding:12px;">
+
+        <!-- Barra de agregar URL -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="stream-url-input" placeholder="Pega URL de YouTube, Twitch, cualquier video..." autocomplete="off"
+                style="flex:1;min-width:200px;background:var(--bg2,#111);color:var(--fg,#1a1a1a);border:1px solid var(--accent,#ff003c);padding:7px 12px;font-family:inherit;font-size:0.7rem;border-radius:4px;outline:none;">
+            <input type="text" id="stream-label-input" placeholder="Nombre (opcional)" autocomplete="off"
+                style="width:160px;background:var(--bg2,#111);color:var(--fg,#1a1a1a);border:1px solid #333;padding:7px 12px;font-family:inherit;font-size:0.7rem;border-radius:4px;outline:none;">
+            <button onclick="addStreamPanel()" class="primary-btn" style="white-space:nowrap;padding:7px 16px;">+ AGREGAR</button>
+            <button onclick="clearAllPanels()" style="background:transparent;color:#666;border:1px solid #333;padding:7px 12px;font-family:inherit;font-size:0.65rem;border-radius:4px;cursor:pointer;white-space:nowrap;">✕ LIMPIAR TODO</button>
+            <span id="stream-count" style="color:#555;font-size:0.6rem;white-space:nowrap;">0 / 10 STREAMS</span>
+        </div>
+
+        <!-- Mosaico de reproductores -->
+        <div id="stream-grid" style="
+            flex:1;
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+            gap:8px;
+            overflow-y:auto;
+            min-height:400px;
+        "></div>
+
+        <div id="stream-empty" style="color:#333;font-size:0.65rem;text-align:center;padding:40px;letter-spacing:0.15em;">
+            SIN STREAMS — AGREGA UNA URL ARRIBA
+        </div>
     </div>
 </div>
 
@@ -203,9 +241,7 @@
         <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-creador')"></button></div>
     </div>
     <div class="win-body creador-body">
-
         <div class="creador-grid">
-            <!-- TEXTO -->
             <div class="upload-sector" id="sector-txt">
                 <div class="sector-header"><span class="sector-icon">📄</span> ARCHIVO DE TEXTO</div>
                 <input type="text" id="up-name-txt" placeholder="Nombre del archivo">
@@ -219,8 +255,6 @@
                 <button class="primary-btn upload-btn" onclick="saveFile('txt')">REGISTRAR → BÓVEDA</button>
                 <div class="upload-progress" id="prog-txt"><div class="prog-bar" id="progbar-txt"></div></div>
             </div>
-
-            <!-- IMAGEN -->
             <div class="upload-sector" id="sector-img">
                 <div class="sector-header"><span class="sector-icon">🖼</span> IMAGEN → GALERÍA</div>
                 <input type="text" id="up-name-img" placeholder="Nombre de la imagen">
@@ -234,8 +268,6 @@
                 <button class="primary-btn upload-btn" onclick="saveFile('img')">REGISTRAR → GALERÍA</button>
                 <div class="upload-progress" id="prog-img"><div class="prog-bar" id="progbar-img"></div></div>
             </div>
-
-            <!-- VIDEO -->
             <div class="upload-sector" id="sector-vid">
                 <div class="sector-header"><span class="sector-icon">🎬</span> VIDEO → GALERÍA</div>
                 <input type="text" id="up-name-vid" placeholder="Nombre del video">
@@ -249,8 +281,6 @@
                 <button class="primary-btn upload-btn" onclick="saveFile('vid')">REGISTRAR → GALERÍA</button>
                 <div class="upload-progress" id="prog-vid"><div class="prog-bar" id="progbar-vid"></div></div>
             </div>
-
-            <!-- AUDIO -->
             <div class="upload-sector" id="sector-aud">
                 <div class="sector-header"><span class="sector-icon">🎵</span> MÚSICA → FRECUENCIAS</div>
                 <input type="text" id="up-name-aud" placeholder="Nombre de la pista">
@@ -265,8 +295,6 @@
                 <div class="upload-progress" id="prog-aud"><div class="prog-bar" id="progbar-aud"></div></div>
             </div>
         </div>
-
-        <!-- VINCULAR COMANDO -->
         <div class="cmd-sector">
             <div class="sector-header"><span class="sector-icon">⌨</span> VINCULAR COMANDO TERMINAL</div>
             <div class="cmd-row">
@@ -275,12 +303,12 @@
                 <button class="primary-btn" onclick="saveCommand()">VINCULAR PROTOCOLO</button>
             </div>
         </div>
-
     </div>
 </div>
 
-<!-- ═══════ SCRIPTS ═══════ -->
+<!-- ═══ SCRIPTS ═══ -->
 <script type="module" src="js/firebase.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
+

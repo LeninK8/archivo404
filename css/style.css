@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════
+   ARCHIVO 404 — ANIMATIONS
+   ═══════════════════════════════════ */
+
+/* ── Fade ── */
+@keyframes fadeIn {
+    from { opacity:0; transform:translateY(4px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── Window open ── */
+@keyframes winOpen {
+    from { opacity:0; transform:scale(0.96) translateY(8px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
+
+/* ── Scale in (lightbox) ── */
+@keyframes scaleIn {
+    from { opacity:0; transform:scale(0.9); }
+    to   { opacity:1; transform:scale(1); }
+}
+
+/* ── Slide in (modal) ── */
+@keyframes slideIn {
+    from { opacity:0; transform:translateY(-16px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── Glitch ── */
+.glitch-text {
+    animation: glitch-core 0.15s infinite;
+}
+@keyframes glitch-core {
+    0%  { text-shadow: 2px 0 var(--accent), -2px 0 #0ff; }
+    20% { text-shadow: -2px 0 var(--accent), 2px 0 #0ff; clip-path: inset(30% 0 40% 0); }
+    40% { text-shadow: 2px 2px var(--accent), -2px -2px #0ff; clip-path: inset(60% 0 10% 0); }
+    60% { text-shadow: -2px 2px var(--accent), 2px -2px #0ff; }
+    80% { text-shadow: 2px -2px var(--accent), -2px 2px #0ff; clip-path: inset(0% 0 80% 0); }
+    100%{ text-shadow: none; clip-path: none; }
+}
+
+/* ── Scan line pulse ── */
+@keyframes scanPulse {
+    0%, 100% { opacity:0.03; }
+    50%       { opacity:0.07; }
+}
+body::after {
+    content:'';
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+    );
+    pointer-events:none; z-index:99997;
+    animation: scanPulse 4s ease-in-out infinite;
+}
+
+/* ── Upload sector pulse when uploading ── */
+@keyframes uploadPulse {
+    0%, 100% { border-color: var(--border); }
+    50%       { border-color: var(--accent); box-shadow: 0 0 12px rgba(255,0,60,0.15); }
+}
+.upload-sector.uploading {
+    animation: uploadPulse 1s ease-in-out infinite;
+}
+
+/* ── Sentinel active blink ── */
+@keyframes sentinelBlink {
+    0%, 100% { color: var(--green); }
+    50%       { color: #003318; }
+}
+.sentinel-active .sentinel-icon {
+    animation: sentinelBlink 1s ease-in-out infinite;
+}
+
+/* ── Status badge pulse ── */
+@keyframes badgePulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(255,0,60,0.2); }
+    50%       { box-shadow: 0 0 18px rgba(255,0,60,0.5); }
+}
+.status-badge { animation: badgePulse 3s ease-in-out infinite; }
+
+/* ── Boot logo flicker ── */
+@keyframes flicker {
+    0%,19%,21%,23%,25%,54%,56%,100% {
+        text-shadow: 0 0 40px rgba(255,0,60,0.5);
+        opacity:1;
+    }
+    20%, 24%, 55% { opacity: 0.6; text-shadow: none; }
+}
+.boot-logo { animation: flicker 3s linear infinite; }
+
+/* ── Audio eq bars (decorativo en now-playing) ── */
+@keyframes eq1 { 0%,100%{height:4px} 50%{height:12px} }
+@keyframes eq2 { 0%,100%{height:8px} 50%{height:4px}  }
+@keyframes eq3 { 0%,100%{height:6px} 50%{height:14px} }
+
+.eq-bars { display:inline-flex; align-items:flex-end; gap:2px; height:14px; margin-left:6px; vertical-align:middle; }
+.eq-bar { width:3px; background:var(--accent); border-radius:1px; }
+.eq-bar:nth-child(1) { animation: eq1 0.6s ease-in-out infinite; }
+.eq-bar:nth-child(2) { animation: eq2 0.5s ease-in-out infinite; }
+.eq-bar:nth-child(3) { animation: eq3 0.7s ease-in-out infinite; }
+
+/* ── Card hover glow ── */
+.gallery-thumb:hover::after {
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(135deg, rgba(255,0,60,0.05), transparent);
+    pointer-events:none;
+}
+
+/* ── Progress bar shimmer ── */
+@keyframes shimmer {
+    from { background-position: -200px 0; }
+    to   { background-position: 200px 0; }
+}
+.prog-bar {
+    background: linear-gradient(90deg, var(--accent) 0%, #ff6680 50%, var(--accent) 100%);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s linear infinite;
+}

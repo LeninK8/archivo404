@@ -3,258 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathTrainer Pro - Mental Calculus v4.2</title>
-    <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --bg: #f4f7f6;
-            --text: #333;
-            --success: #27ae60;
-            --warning: #f39c12;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        header {
-            background: var(--primary);
-            color: white;
-            width: 100%;
-            padding: 1rem 0;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .stats-bar {
-            display: flex;
-            justify-content: space-around;
-            background: #fff;
-            width: 100%;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            font-weight: bold;
-        }
-
-        .container {
-            max-width: 600px;
-            width: 90%;
-            margin-top: 30px;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            margin-bottom: 50px;
-        }
-
-        .math-box {
-            background: #eef2f3;
-            padding: 20px;
-            border-radius: 8px;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-            color: #555;
-            border: 1px dashed #ccc;
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2rem;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-            transition: border 0.3s;
-        }
-
-        input:focus { border-color: var(--accent); outline: none; }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.1rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin-bottom: 10px;
-        }
-
-        button:hover { background: var(--accent); }
-
-        .shop-section {
-            margin-top: 40px;
-            border-top: 2px solid #f0f0f0;
-            padding-top: 20px;
-        }
-
-        .shop-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f9f9f9;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid var(--accent);
-        }
-
-        .shop-item div { max-width: 70%; }
-
-        #log {
-            margin-top: 20px;
-            font-size: 0.9rem;
-            min-height: 1.2rem;
-        }
-
-        .puntos-text { color: var(--success); font-size: 1.3rem; }
-    </style>
+    <title>ARCHIVO 404 | CORE_SYSTEM</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-    <header>
-        <h1>MathTrainer <span style="font-weight: 300;">Academic Edition</span></h1>
+<!-- CAPA DE BOOT -->
+<div id="boot-screen">
+    <div class="boot-content">
+        <div class="boot-logo">ARCHIVO_404</div>
+        <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+        <div class="boot-log" id="boot-log"></div>
+    </div>
+</div>
+
+<!-- CAPA DE PÁNICO -->
+<div id="panic-layer">
+    <div class="glitch-text" data-text="CRITICAL_ERROR">CRITICAL_ERROR</div>
+    <p class="panic-sub">WIPING_ALL_SECTORS...</p>
+</div>
+
+<!-- MODAL CLAVE 404 -->
+<div id="key-modal-overlay" class="key-modal-overlay" onclick="closeKeyModal()">
+    <div class="key-modal" onclick="event.stopPropagation()">
+        <div class="key-modal-icon">🔐</div>
+        <h3>ACCESO ENCRIPTADO</h3>
+        <p>INGRESA LA CLAVE DE SEGURIDAD</p>
+        <input type="password" id="key-input" placeholder="····" maxlength="10" autocomplete="off">
+        <button class="primary-btn" onclick="submitKey()">VERIFICAR IDENTIDAD</button>
+        <p id="key-error">⚠ CLAVE INCORRECTA — ACCESO DENEGADO</p>
+    </div>
+</div>
+
+<!-- MODAL VISOR DE FOTO (LIGHTBOX) -->
+<div id="lightbox" class="lightbox-overlay" onclick="closeLightbox()">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <div id="lightbox-media"></div>
+        <div id="lightbox-name"></div>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">A404</span>
+    </div>
+    <div class="side-item" onclick="openWin('w-files')">
+        <span class="side-icon">📂</span><span class="side-label">BÓVEDA</span>
+    </div>
+    <div class="side-item" onclick="openGallery()">
+        <span class="side-icon">🎞</span><span class="side-label">GALERÍA</span>
+    </div>
+    <div class="side-item" onclick="openWin('w-audio')">
+        <span class="side-icon">🎵</span><span class="side-label">FRECUENCIAS</span>
+    </div>
+    <div class="side-item" onclick="openWin('w-notes')">
+        <span class="side-icon">📝</span><span class="side-label">BITÁCORA</span>
+    </div>
+    <div class="side-item" onclick="openWin('w-tasks')">
+        <span class="side-icon">🎯</span><span class="side-label">OBJETIVOS</span>
+    </div>
+    <div class="side-divider"></div>
+    <div class="side-item" onclick="toggleSentinel()">
+        <span class="side-icon sentinel-icon">🛡</span><span class="side-label">CENTINELA</span>
+    </div>
+    <div class="side-item danger-item" onclick="panicAbort()">
+        <span class="side-icon">⏻</span><span class="side-label">ABORTAR</span>
+    </div>
+</nav>
+
+<!-- ÁREA PRINCIPAL -->
+<main class="main-stage">
+    <header class="system-header">
+        <div class="title-group">
+            <h1 class="main-title" data-text="ARCHIVO 404">ARCHIVO 404</h1>
+            <p class="subtitle">USER: LENIN // STATUS: <span class="status-online">ENCRYPTED ●</span></p>
+        </div>
+        <div class="header-right">
+            <div class="status-badge" id="uptime">UPTIME: 00:00:00</div>
+            <div class="firebase-badge" id="fb-status">⬤ CONECTANDO...</div>
+        </div>
     </header>
 
-    <div class="stats-bar">
-        <span>Sesión: <span id="sesion-id">#8821</span></span>
-        <span>Puntos: <span id="puntos-val" class="puntos-text">200</span></span>
+    <section class="terminal-container">
+        <div class="terminal-topbar">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">CORE_TERMINAL v3.0</span>
+        </div>
+        <div id="output-stream"></div>
+        <div class="input-line">
+            <span class="prompt">root@404:~$</span>
+            <input type="text" id="main-input" placeholder="ingrese comando..." autocomplete="off" spellcheck="false">
+        </div>
+    </section>
+</main>
+
+<!-- ═══════════════════ VENTANAS FLOTANTES ═══════════════════ -->
+
+<!-- BÓVEDA -->
+<div id="w-files" class="win" style="top:8%;left:12%;width:680px;height:500px;">
+    <div class="win-head">
+        <div class="win-head-left"><span class="win-icon">📂</span><span class="win-title">SECTORES DE MEMORIA</span></div>
+        <div class="win-controls">
+            <button class="enc-toggle-btn" id="vault-enc-btn" onclick="toggleVaultEncrypted()">🔒 CIFRADOS</button>
+            <button class="win-btn close" onclick="closeWin('w-files')"></button>
+        </div>
     </div>
+    <div class="win-body">
+        <input type="text" id="file-filter" placeholder="FILTRAR SECTORES..." oninput="renderVault()" class="search-input">
+        <div id="vault-grid" class="grid-view"></div>
+    </div>
+</div>
 
-    <div class="container">
-        <p>Resuelve la ecuación para determinar el coeficiente <b>X (0-100)</b>:</p>
-        
-        <div class="math-box" id="ecuacion">Cargando algoritmo...</div>
+<!-- EDITOR -->
+<div id="w-editor" class="win" style="top:12%;left:18%;width:740px;height:540px;">
+    <div class="win-head">
+        <div class="win-head-left"><span class="win-icon">✏</span><span class="win-title" id="edit-filename">EDITOR DE DATOS</span></div>
+        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-editor')"></button></div>
+    </div>
+    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
+        <textarea id="editor-field" class="editor-textarea" spellcheck="false"></textarea>
+        <button class="primary-btn" onclick="commitFile()">⟳ SINCRONIZAR CAMBIOS</button>
+    </div>
+</div>
 
-        <input type="number" id="user-input" placeholder="Introduce el valor de X" onkeypress="handleKey(event)">
-        <button onclick="verificar()">ENVIAR RESPUESTA</button>
-        
-        <div id="log"></div>
+<!-- GALERÍA -->
+<div id="w-gallery" class="win" style="top:5%;left:8%;width:900px;height:620px;">
+    <div class="win-head">
+        <div class="win-head-left"><span class="win-icon">🎞</span><span class="win-title">GALERÍA VISUAL</span></div>
+        <div class="win-controls">
+            <button class="enc-toggle-btn" id="gallery-enc-btn" onclick="toggleGalleryEncrypted()">🔒 CIFRADOS</button>
+            <button class="win-btn close" onclick="closeWin('w-gallery')"></button>
+        </div>
+    </div>
+    <div class="win-body gallery-body">
+        <!-- FOTOS -->
+        <div class="gallery-section">
+            <div class="gallery-section-title">📷 IMÁGENES</div>
+            <div id="gallery-photos" class="gallery-grid"></div>
+        </div>
+        <!-- VIDEOS -->
+        <div class="gallery-section">
+            <div class="gallery-section-title">🎬 VIDEOS</div>
+            <div id="gallery-videos" class="gallery-grid"></div>
+        </div>
+    </div>
+</div>
 
-        <div class="shop-section">
-            <h3>🛒 Tienda de Ayudas Académicas</h3>
-            
-            <div class="shop-item">
-                <div>
-                    <strong>Revelar Coeficiente X</strong><br>
-                    <small>Costo: 200 pts</small>
+<!-- FRECUENCIAS -->
+<div id="w-audio" class="win" style="top:45%;left:35%;width:460px;height:360px;">
+    <div class="win-head">
+        <div class="win-head-left"><span class="win-icon">🎵</span><span class="win-title">FRECUENCIAS DE AUDIO</span></div>
+        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-audio')"></button></div>
+    </div>
+    <div class="win-body audio-body">
+        <div class="audio-player-wrap">
+            <div id="now-playing" class="now-playing">— SIN PISTA ACTIVA —</div>
+            <audio id="audio-player" controls></audio>
+        </div>
+        <div id="audio-list" class="audio-list"></div>
+    </div>
+</div>
+
+<!-- BITÁCORA -->
+<div id="w-notes" class="win" style="top:18%;left:38%;width:500px;height:420px;">
+    <div class="win-head">
+        <div class="win-head-left"><span class="win-icon">📝</span><span class="win-title">BITÁCORA</span></div>
+        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-notes')"></button></div>
+    </div>
+    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
+        <textarea id="txt-notes" class="editor-textarea" placeholder="Notas del operador..."></textarea>
+        <button class="primary-btn" onclick="saveStatic('notes')">GUARDAR BITÁCORA</button>
+    </div>
+</div>
+
+<!-- OBJETIVOS -->
+<div id="w-tasks" class="win" style="top:22%;left:42%;width:500px;height:420px;">
+    <div class="win-head">
+        <div class="win-head-left"><span class="win-icon">🎯</span><span class="win-title">OBJETIVOS</span></div>
+        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-tasks')"></button></div>
+    </div>
+    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
+        <textarea id="txt-tasks" class="editor-textarea" placeholder="Objetivos del sistema..."></textarea>
+        <button class="primary-btn" onclick="saveStatic('tasks')">GUARDAR OBJETIVOS</button>
+    </div>
+</div>
+
+<!-- CREADOR -->
+<div id="w-creador" class="win" style="top:3%;left:4%;width:1000px;height:640px;">
+    <div class="win-head">
+        <div class="win-head-left"><span class="win-icon">⚙</span><span class="win-title">PANEL DE ADMINISTRACIÓN — NÚCLEO</span></div>
+        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-creador')"></button></div>
+    </div>
+    <div class="win-body creador-body">
+
+        <div class="creador-grid">
+            <!-- TEXTO -->
+            <div class="upload-sector" id="sector-txt">
+                <div class="sector-header"><span class="sector-icon">📄</span> ARCHIVO DE TEXTO</div>
+                <input type="text" id="up-name-txt" placeholder="Nombre del archivo">
+                <div class="drop-zone" id="drop-txt" onclick="document.getElementById('upload-txt').click()">
+                    <span class="drop-icon">📄</span>
+                    <span class="drop-hint">Click o arrastra aquí</span>
+                    <span class="drop-sub" id="drop-txt-name">Acepta .txt .md .json .csv</span>
                 </div>
-                <button onclick="comprarPista(200, 'revelar')" style="width: 90px; padding: 8px;">Comprar</button>
+                <input type="file" id="upload-txt" style="display:none" accept=".txt,.md,.json,.csv,.log" onchange="handleUpload(this,'txt')">
+                <label class="enc-label"><input type="checkbox" id="enc-txt"> 🔒 ENCRIPTAR (clave: 404)</label>
+                <button class="primary-btn upload-btn" onclick="saveFile('txt')">REGISTRAR → BÓVEDA</button>
+                <div class="upload-progress" id="prog-txt"><div class="prog-bar" id="progbar-txt"></div></div>
             </div>
 
-            <div class="shop-item">
-                <div>
-                    <strong>Multiplicador x2</strong><br>
-                    <small>Costo: 500 pts</small>
+            <!-- IMAGEN -->
+            <div class="upload-sector" id="sector-img">
+                <div class="sector-header"><span class="sector-icon">🖼</span> IMAGEN → GALERÍA</div>
+                <input type="text" id="up-name-img" placeholder="Nombre de la imagen">
+                <div class="drop-zone" id="drop-img" onclick="document.getElementById('upload-img').click()">
+                    <span class="drop-icon">🖼</span>
+                    <span class="drop-hint">Click o arrastra aquí</span>
+                    <span class="drop-sub" id="drop-img-name">Acepta jpg png gif webp</span>
                 </div>
-                <button onclick="comprarPista(500, 'multi')" style="width: 90px; padding: 8px;">Comprar</button>
+                <input type="file" id="upload-img" style="display:none" accept="image/*" onchange="handleUpload(this,'img')">
+                <label class="enc-label"><input type="checkbox" id="enc-img"> 🔒 ENCRIPTAR (clave: 404)</label>
+                <button class="primary-btn upload-btn" onclick="saveFile('img')">REGISTRAR → GALERÍA</button>
+                <div class="upload-progress" id="prog-img"><div class="prog-bar" id="progbar-img"></div></div>
             </div>
 
-            <div class="shop-item">
-                <div>
-                    <strong>Escudo de Racha</strong><br>
-                    <small>Costo: 150 pts</small>
+            <!-- VIDEO -->
+            <div class="upload-sector" id="sector-vid">
+                <div class="sector-header"><span class="sector-icon">🎬</span> VIDEO → GALERÍA</div>
+                <input type="text" id="up-name-vid" placeholder="Nombre del video">
+                <div class="drop-zone" id="drop-vid" onclick="document.getElementById('upload-vid').click()">
+                    <span class="drop-icon">🎬</span>
+                    <span class="drop-hint">Click o arrastra aquí</span>
+                    <span class="drop-sub" id="drop-vid-name">Acepta mp4 webm mov</span>
                 </div>
-                <button onclick="comprarPista(150, 'escudo')" style="width: 90px; padding: 8px;">Comprar</button>
+                <input type="file" id="upload-vid" style="display:none" accept="video/*" onchange="handleUpload(this,'vid')">
+                <label class="enc-label"><input type="checkbox" id="enc-vid"> 🔒 ENCRIPTAR (clave: 404)</label>
+                <button class="primary-btn upload-btn" onclick="saveFile('vid')">REGISTRAR → GALERÍA</button>
+                <div class="upload-progress" id="prog-vid"><div class="prog-bar" id="progbar-vid"></div></div>
             </div>
 
-            <div class="shop-item">
-                <div>
-                    <strong>Modo Trigonometría</strong><br>
-                    <small>Costo: 1000 pts</small>
+            <!-- AUDIO -->
+            <div class="upload-sector" id="sector-aud">
+                <div class="sector-header"><span class="sector-icon">🎵</span> MÚSICA → FRECUENCIAS</div>
+                <input type="text" id="up-name-aud" placeholder="Nombre de la pista">
+                <div class="drop-zone" id="drop-aud" onclick="document.getElementById('upload-aud').click()">
+                    <span class="drop-icon">🎵</span>
+                    <span class="drop-hint">Click o arrastra aquí</span>
+                    <span class="drop-sub" id="drop-aud-name">Acepta mp3 wav ogg flac</span>
                 </div>
-                <button onclick="comprarPista(1000, 'modo')" style="width: 90px; padding: 8px;">Comprar</button>
+                <input type="file" id="upload-aud" style="display:none" accept="audio/*" onchange="handleUpload(this,'aud')">
+                <label class="enc-label"><input type="checkbox" id="enc-aud"> 🔒 ENCRIPTAR (clave: 404)</label>
+                <button class="primary-btn upload-btn" onclick="saveFile('aud')">REGISTRAR → FRECUENCIAS</button>
+                <div class="upload-progress" id="prog-aud"><div class="prog-bar" id="progbar-aud"></div></div>
             </div>
         </div>
 
-        <p style="margin-top: 50px; color: #ccc; font-size: 0.7rem;">v.4.2.0 - System Terminal Status: Online</p>
+        <!-- VINCULAR COMANDO -->
+        <div class="cmd-sector">
+            <div class="sector-header"><span class="sector-icon">⌨</span> VINCULAR COMANDO TERMINAL</div>
+            <div class="cmd-row">
+                <input type="text" id="cmd-name" placeholder="Nombre del comando (ej: saludo)">
+                <textarea id="cmd-res" placeholder="Respuesta del sistema..."></textarea>
+                <button class="primary-btn" onclick="saveCommand()">VINCULAR PROTOCOLO</button>
+            </div>
+        </div>
+
     </div>
+</div>
 
-<script>
-    let puntos = parseInt(localStorage.getItem('math_points')) || 200;
-    let numeroSecreto = 0;
-
-    function iniciarNivel() {
-        numeroSecreto = Math.floor(Math.random() * 101);
-        let n1 = Math.floor(Math.random() * 10) + 1;
-        let n2 = Math.floor(Math.random() * 10) + 1;
-        let n3 = Math.floor(Math.random() * 5) + 1;
-        
-        document.getElementById("ecuacion").innerText = `${n1}x * ${n2} + (${numeroSecreto} * 2) / ${n3} - ?`;
-        actualizarInterfaz();
-    }
-
-    function actualizarInterfaz() {
-        document.getElementById("puntos-val").innerText = puntos;
-        localStorage.setItem('math_points', puntos);
-        document.getElementById("sesion-id").innerText = "#" + Math.floor(Math.random() * 9000 + 1000);
-    }
-
-    function handleKey(e) {
-        if (e.key === "Enter") verificar();
-    }
-
-    function verificar() {
-        let inputEl = document.getElementById("user-input");
-        let val = inputEl.value;
-        let log = document.getElementById("log");
-
-        // --- CORRECCIÓN DEL ERROR 404 ---
-        if (val === "404") {
-            inputEl.value = ""; // Borramos el número ANTES de irnos
-            window.location.href = "archivo404.html";
-            return;
-        }
-
-        if (parseInt(val) === numeroSecreto) {
-            puntos += 20;
-            log.style.color = "green";
-            log.innerText = "✓ Correcto. +20 puntos académicos.";
-            setTimeout(() => {
-                log.innerText = "";
-                iniciarNivel();
-            }, 1500);
-        } else {
-            log.style.color = "red";
-            log.innerText = "× Error de cálculo. El valor no coincide.";
-        }
-        inputEl.value = ""; // Limpiar siempre después de enviar
-    }
-
-    function comprarPista(costo, tipo) {
-        if (puntos >= costo) {
-            puntos -= costo;
-            if (tipo === 'revelar') {
-                alert("El coeficiente X actual es: " + numeroSecreto);
-            } else if (tipo === 'multi') {
-                alert("Multiplicador activado para la siguiente sesión.");
-            } else {
-                alert("Objeto adquirido con éxito. Se aplicará en el próximo módulo.");
-            }
-            actualizarInterfaz();
-        } else {
-            alert("Puntos insuficientes. Sigue practicando.");
-        }
-    }
-
-    window.onload = iniciarNivel;
-
-    function systemDiagnostic() {
-        console.log("Iniciando validación de módulos trigonométricos...");
-    }
-    systemDiagnostic();
-</script>
+<!-- ═══════ SCRIPTS ═══════ -->
+<script type="module" src="js/firebase.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

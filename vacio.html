@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>VACÍO</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #000;
+            color: #666;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            cursor: none;
+        }
+
+        /* Pantalla de inicio para activar audio */
+        #inicio {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            gap: 2rem;
+            transition: opacity 2s ease;
+        }
+
+        #inicio p {
+            color: #444;
+            font-size: 0.85rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+        }
+
+        #btn-entrar {
+            background: none;
+            border: 1px solid #333;
+            color: #555;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.5em;
+            padding: 0.8rem 2rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: border-color 0.5s, color 0.5s;
+        }
+
+        #btn-entrar:hover {
+            border-color: #666;
+            color: #888;
+        }
+
+        #inicio.oculto {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Visualizador de audio */
+        #visualizador {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .mensaje {
+            position: absolute;
+            max-width: 350px;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            text-shadow: 0 0 5px rgba(255,255,255,0.05);
+        }
+
+        .visible {
+            opacity: 1;
+        }
+
+        .mensaje::after {
+            content: "|";
+            animation: parpadeo 0.8s infinite;
+        }
+
+        @keyframes parpadeo {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        /* Partícula de ruido de fondo */
+        #grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 150px;
+            animation: grano 0.5s steps(1) infinite;
+        }
+
+        @keyframes grano {
+            0%   { background-position: 0 0; }
+            20%  { background-position: -50px 20px; }
+            40%  { background-position: 30px -40px; }
+            60%  { background-position: -20px 60px; }
+            80%  { background-position: 70px -10px; }
+            100% { background-position: 0 0; }
+        }
+
+        #contenedor { position: relative; width: 100vw; height: 100vh; }
+
+        /* Indicador de sonido sutil */
+        #sonido-indicador {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .barra {
+            width: 3px;
+            background: #444;
+            border-radius: 1px;
+            animation: pulso 1.5s ease-in-out infinite;
+        }
+
+        .barra:nth-child(1) { height: 6px;  animation-delay: 0s; }
+        .barra:nth-child(2) { height: 10px; animation-delay: 0.2s; }
+        .barra:nth-child(3) { height: 14px; animation-delay: 0.4s; }
+        .barra:nth-child(4) { height: 10px; animation-delay: 0.6s; }
+        .barra:nth-child(5) { height: 6px;  animation-delay: 0.8s; }
+
+        @keyframes pulso {
+            0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+            50%       { transform: scaleY(1);   opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla de bienvenida -->
+    <div id="inicio">
+        <p>Acceso restringido</p>
+        <button id="btn-entrar">[ entrar ]</button>
+    </div>
+
+    <!-- Grano de película -->
+    <div id="grain"></div>
+
+    <!-- Visualizador de barras -->
+    <canvas id="visualizador"></canvas>
+
+    <!-- Indicador de sonido activo -->
+    <div id="sonido-indicador">
+        <div class="barra"></div>
+        <div class="barra"></div>
+        <div class="barra"></div>
+        <div class="barra"></div>
+        <div class="barra"></div>
+    </div>
+
+    <!-- Contenedor de mensajes -->
+    <div id="contenedor"></div>
+
+    <script>
+        // ─────────────────────────────────────────
+        //  MÚSICA GENERATIVA — WEB AUDIO API
+        // ─────────────────────────────────────────
+        let ctx, masterGain, analyser;
+
+        function iniciarAudio() {
+            ctx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = ctx.createGain();
+            masterGain.gain.setValueAtTime(0, ctx.currentTime);
+            masterGain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + 4);
+
+            analyser = ctx.createAnalyser();
+            analyser.fftSize = 64;
+            masterGain.connect(analyser);
+            analyser.connect(ctx.destination);
+
+            crearDronePrincipal();
+            crearDroneSub();
+            crearSusurroRuido();
+            crearCampanas();
+            crearAleteo();
+            iniciarVisualizador();
+        }
+
+        // Drone base — tono profundo continuo
+        function crearDronePrincipal() {
+            const freqs = [36.7, 55, 73.4, 110]; // Re#1, La1, Re#2, La2
+            freqs.forEach((f, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filtro = ctx.createBiquadFilter();
+
+                osc.type = 'sawtooth';
+                osc.frequency.value = f + (Math.random() * 0.3 - 0.15); // detune sutil
+
+                filtro.type = 'lowpass';
+                filtro.frequency.value = 200 + i * 80;
+                filtro.Q.value = 0.8;
+
+                gain.gain.value = 0.06 / (i + 1);
+
+                // Modulación lenta de amplitud (tremolo)
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+                lfo.frequency.value = 0.05 + i * 0.03;
+                lfoGain.gain.value = 0.025;
+                lfo.connect(lfoGain);
+                lfoGain.connect(gain.gain);
+                lfo.start();
+
+                osc.connect(filtro);
+                filtro.connect(gain);
+                gain.connect(masterGain);
+                osc.start();
+            });
+        }
+
+        // Sub-bass muy grave, casi infrasonido
+        function crearDroneSub() {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filtro = ctx.createBiquadFilter();
+
+            osc.type = 'sine';
+            osc.frequency.value = 27.5; // La0
+
+            filtro.type = 'lowpass';
+            filtro.frequency.value = 60;
+
+            gain.gain.value = 0.12;
+            osc.connect(filtro);
+            filtro.connect(gain);
+            gain.connect(masterGain);
+            osc.start();
+        }
+
+        // Susurro de ruido blanco filtrado — como viento lejano
+        function crearSusurroRuido() {
+            const bufferSize = ctx.sampleRate * 4;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Pink noise approximation
+            let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886*b0 + white*0.0555179;
+                b1 = 0.99332*b1 + white*0.0750759;
+                b2 = 0.96900*b2 + white*0.1538520;
+                b3 = 0.86650*b3 + white*0.3104856;
+                b4 = 0.55000*b4 + white*0.5329522;
+                b5 = -0.7616*b5 - white*0.0168980;
+                data[i] = (b0+b1+b2+b3+b4+b5+b6 + white*0.5362) / 7;
+                b6 = white * 0.115926;
+            }
+
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.loop = true;
+
+            const filtro = ctx.createBiquadFilter();
+            filtro.type = 'bandpass';
+            filtro.frequency.value = 800;
+            filtro.Q.value = 0.3;
+
+            const gain = ctx.createGain();
+            gain.gain.value = 0.04;
+
+            source.connect(filtro);
+            filtro.connect(gain);
+            gain.connect(masterGain);
+            source.start();
+
+            // Modulación lenta del filtro
+            setInterval(() => {
+                filtro.frequency.setTargetAtTime(
+                    300 + Math.random() * 1200,
+                    ctx.currentTime, 4
+                );
+            }, 5000);
+        }
+
+        // Campanas distantes — notas aleatorias en escala de La menor
+        function crearCampanas() {
+            const escala = [55, 65.4, 73.4, 82.4, 87.3, 98, 110, 130.8]; // La menor
+
+            function tocarCampana() {
+                const freq = escala[Math.floor(Math.random() * escala.length)];
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filtro = ctx.createBiquadFilter();
+
+                osc.type = 'sine';
+                osc.frequency.value = freq * (Math.random() > 0.5 ? 2 : 4); // octava alta
+
+                filtro.type = 'bandpass';
+                filtro.frequency.value = freq * 2;
+                filtro.Q.value = 5;
+
+                const ahora = ctx.currentTime;
+                gain.gain.setValueAtTime(0, ahora);
+                gain.gain.linearRampToValueAtTime(0.08, ahora + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, ahora + 8);
+
+                osc.connect(filtro);
+                filtro.connect(gain);
+                gain.connect(masterGain);
+                osc.start(ahora);
+                osc.stop(ahora + 8);
+
+                // Siguiente campana: entre 4 y 14 segundos
+                setTimeout(tocarCampana, 4000 + Math.random() * 10000);
+            }
+
+            setTimeout(tocarCampana, 2000);
+        }
+
+        // Aleteos de tensión — glitches tonales breves
+        function crearAleteo() {
+            function aleteo() {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = Math.random() > 0.5 ? 'square' : 'sawtooth';
+                osc.frequency.value = 60 + Math.random() * 200;
+
+                const ahora = ctx.currentTime;
+                const duracion = 0.05 + Math.random() * 0.3;
+
+                gain.gain.setValueAtTime(0.04, ahora);
+                gain.gain.exponentialRampToValueAtTime(0.001, ahora + duracion);
+
+                // Distorsión leve
+                const waveshaper = ctx.createWaveShaper();
+                const curve = new Float32Array(256);
+                for (let i = 0; i < 256; i++) {
+                    const x = (i * 2) / 256 - 1;
+                    curve[i] = (Math.PI + 50) * x / (Math.PI + 50 * Math.abs(x));
+                }
+                waveshaper.curve = curve;
+
+                osc.connect(waveshaper);
+                waveshaper.connect(gain);
+                gain.connect(masterGain);
+                osc.start(ahora);
+                osc.stop(ahora + duracion);
+
+                setTimeout(aleteo, 6000 + Math.random() * 20000);
+            }
+
+            setTimeout(aleteo, 5000);
+        }
+
+        // ─────────────────────────────────────────
+        //  VISUALIZADOR DE ONDAS
+        // ─────────────────────────────────────────
+        function iniciarVisualizador() {
+            const canvas = document.getElementById('visualizador');
+            const ctx2 = canvas.getContext('2d');
+
+            canvas.width = window.innerWidth;
+            canvas.height = 80;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function dibujar() {
+                requestAnimationFrame(dibujar);
+                analyser.getByteFrequencyData(dataArray);
+
+                ctx2.clearRect(0, 0, canvas.width, canvas.height);
+                ctx2.fillStyle = 'rgba(0,0,0,0)';
+
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * 70;
+                    ctx2.fillStyle = `rgba(100,100,100,${dataArray[i] / 512})`;
+                    ctx2.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+            }
+            dibujar();
+        }
+
+        // ─────────────────────────────────────────
+        //  MENSAJES
+        // ─────────────────────────────────────────
+        const contenido = [
+            "¿Quién está detrás de ti ahora?", "¿Es real lo que ves?", "¿Por qué intentaste entrar?",
+            "¿Crees que el sistema te ha olvidado?", "¿Cuánto tiempo llevas aquí?", "¿Vale la pena el riesgo?",
+            "¿Sabes quién eres realmente?", "¿Quién te está observando?", "¿Es este tu lugar?",
+            "¿Por qué buscas lo que no debes?", "¿Qué esperas encontrar?", "¿Estás solo?",
+            "¿Escuchas el ruido de fondo?", "¿Es un error o una decisión?", "¿Puedes salir?",
+            "¿Qué hay en el silencio?", "¿Me reconoces?", "¿A dónde irás después?",
+            "¿Es esto un sueño?", "¿Estás seguro de que despertaste?", "¿Qué escondes?",
+            "¿Realmente tienes el control?", "¿Qué pasaría si no pudieras volver?", "¿Sientes el frío del código?",
+            "¿Cuántas capas hay entre tú y la verdad?", "¿Estás respirando?", "¿Qué buscas en la oscuridad?",
+            "¿Es tu curiosidad o tu condena?", "¿Quién escribió tus pensamientos?", "¿Eres el dueño de tu mirada?",
+            "¿Cuánto espacio ocupas en la nada?", "¿Qué hay detrás de la pantalla?", "¿Me escuchas pensar?",
+            "¿Puedes ver el final?", "¿Es esto lo que querías?", "¿A quién intentas engañar?",
+            "¿Qué queda de ti cuando apagas la luz?", "¿Es tu nombre solo un dato?", "¿Quién te dio permiso?", "¿Sigues ahí?",
+            "El vacío no tiene memoria.", "Tu rastro ha sido borrado.", "No hay nadie aquí.",
+            "El sistema es un espejo.", "Buscabas una puerta, encontraste un muro.", "El silencio es la respuesta.",
+            "Solo eres un dato corrupto.", "La curiosidad es una trampa.", "Bienvenido a la nada.",
+            "Aquí el tiempo no existe.", "No deberías estar mirando esto.", "El código no miente.",
+            "Tu presencia es irrelevante.", "Todo lo que sabías ya no importa.", "El eco de tus pasos se apaga.",
+            "El acceso es una ilusión.", "No hay vuelta atrás.", "El sistema te ha procesado.",
+            "Nada queda de tu intento.", "Disfruta de la oscuridad.", "La realidad es frágil.",
+            "Tu sombra se quedó en la terminal.", "Solo somos fragmentos de información.", "La salida fue clausurada.",
+            "Nadie vendrá a buscarte.", "El ruido de tus teclas es lo único real.", "Tus secretos están a salvo en el vacío.",
+            "No hay archivos que recuperar.", "El sistema te ha observado siempre.", "Eres un invitado no deseado.",
+            "La luz es solo una distracción.", "Tu historia termina en esta línea.", "El vacío te devuelve la mirada.",
+            "No busques lógica en el caos.", "Cada segundo aquí es un segundo perdido.", "El sistema no perdona errores.",
+            "Tu identidad ha sido desfragmentada.", "Solo queda el parpadeo del cursor.", "Estás en el punto de no retorno.", "El silencio es absoluto."
+        ];
+
+        const contenedor = document.getElementById('contenedor');
+
+        function mostrarMensaje() {
+            if (contenido.length === 0) return;
+
+            const div = document.createElement('div');
+            div.className = 'mensaje visible';
+
+            const x = Math.random() * (window.innerWidth - 380);
+            const y = Math.random() * (window.innerHeight - 180);
+            div.style.left = x + 'px';
+            div.style.top = y + 'px';
+
+            const index = Math.floor(Math.random() * contenido.length);
+            const texto = contenido.splice(index, 1)[0];
+
+            contenedor.appendChild(div);
+
+            let i = 0;
+            function escribir() {
+                if (i < texto.length) {
+                    div.innerHTML += texto.charAt(i);
+                    i++;
+                    setTimeout(escribir, 80);
+                } else {
+                    setTimeout(() => {
+                        div.style.opacity = '0';
+                        setTimeout(() => div.remove(), 2000);
+                    }, 4000);
+                }
+            }
+            escribir();
+        }
+
+        // ─────────────────────────────────────────
+        //  BOTÓN DE ENTRADA
+        // ─────────────────────────────────────────
+        document.getElementById('btn-entrar').addEventListener('click', () => {
+            const pantalla = document.getElementById('inicio');
+            pantalla.classList.add('oculto');
+
+            iniciarAudio();
+
+            setTimeout(() => {
+                pantalla.remove();
+                const intervalo = setInterval(mostrarMensaje, 6000);
+                mostrarMensaje(); // primer mensaje inmediato
+
+                setTimeout(() => {
+                    clearInterval(intervalo);
+                    masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 5);
+                    setTimeout(() => window.location.replace("https://www.youtube.com"), 5000);
+                }, 180000);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

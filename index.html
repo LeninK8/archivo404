@@ -3,312 +3,835 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARCHIVO 404 | CORE_SYSTEM</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>MathTrainer Pro - Mental Calculus v4.2</title>
+    <style>
+        :root {
+            --primary: #1a2332;
+            --accent: #3498db;
+            --accent2: #9b59b6;
+            --bg: #f0f4f8;
+            --text: #2c3e50;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --card: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+            color: white;
+            width: 100%;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        header h1 { font-size: 1.2rem; letter-spacing: 0.05em; }
+        header h1 span { font-weight: 300; color: #7fb3d3; }
+        .header-badge {
+            background: #27ae60;
+            color: white;
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.08em;
+            animation: pulse-badge 2s infinite;
+        }
+        @keyframes pulse-badge {
+            0%,100% { opacity:1; } 50% { opacity:0.7; }
+        }
+
+        /* ── STATS BAR ── */
+        .stats-bar {
+            width: 100%;
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.85rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .stat-label { font-size: 0.6rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; }
+        .stat-value { font-weight: 700; font-size: 1rem; color: var(--primary); }
+        .stat-value.green { color: var(--success); }
+        .stat-value.blue  { color: var(--accent); }
+        .stat-value.gold  { color: var(--warning); }
+
+        /* ── MAIN ── */
+        .main-wrap {
+            display: flex;
+            gap: 20px;
+            max-width: 1000px;
+            width: 95%;
+            margin: 24px auto;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card);
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+            padding: 24px;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        /* ── NIVEL / PROGRESO ── */
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .level-tag {
+            background: #eef5ff;
+            color: var(--accent);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.1em;
+        }
+        .xp-bar-wrap {
+            background: #eee;
+            border-radius: 20px;
+            height: 8px;
+            margin-bottom: 18px;
+            overflow: hidden;
+        }
+        .xp-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 20px;
+            transition: width 0.6s ease;
+        }
+
+        /* ── ECUACIÓN ── */
+        .math-box {
+            background: #f7f9fc;
+            border: 2px dashed #cdd8e3;
+            border-radius: 10px;
+            padding: 22px 16px;
+            text-align: center;
+            font-size: 1.4rem;
+            color: #444;
+            letter-spacing: 2px;
+            margin-bottom: 18px;
+            position: relative;
+            min-height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .math-box.correct  { border-color: var(--success); background: #f0faf4; animation: flash-green 0.5s; }
+        .math-box.wrong    { border-color: var(--danger);  background: #fff5f5; animation: shake 0.4s; }
+        @keyframes flash-green { 0%,100%{background:#f0faf4} 50%{background:#d4efdf} }
+        @keyframes shake {
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-6px)}
+            40%{transform:translateX(6px)}
+            60%{transform:translateX(-4px)}
+            80%{transform:translateX(4px)}
+        }
+
+        /* ── TIMER ── */
+        .timer-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .timer-bar-wrap {
+            flex: 1;
+            background: #eee;
+            border-radius: 20px;
+            height: 6px;
+            overflow: hidden;
+        }
+        .timer-bar {
+            height: 100%;
+            background: var(--success);
+            border-radius: 20px;
+            transition: width 1s linear, background 0.3s;
+        }
+        .timer-text {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #666;
+            min-width: 28px;
+            text-align: right;
+        }
+
+        /* ── INPUT ── */
+        .input-group { display: flex; gap: 10px; margin-bottom: 14px; }
+        input[type="number"] {
+            flex: 1;
+            padding: 13px 16px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: border 0.3s;
+            outline: none;
+        }
+        input[type="number"]:focus { border-color: var(--accent); }
+        .btn-primary {
+            padding: 13px 20px;
+            font-size: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-primary:hover  { background: var(--accent); }
+        .btn-primary:active { transform: scale(0.97); }
+
+        /* ── FEEDBACK ── */
+        #log {
+            min-height: 28px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 6px;
+            padding: 4px;
+            transition: all 0.3s;
+        }
+
+        /* ── RACHA ── */
+        .streak-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 14px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .streak-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            transition: background 0.3s;
+        }
+        .streak-dot.on { background: var(--warning); box-shadow: 0 0 4px var(--warning); }
+
+        /* ── HISTORIAL ── */
+        .history-list {
+            margin-top: 14px;
+            font-size: 0.75rem;
+            color: #aaa;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        .history-item { padding: 2px 0; border-bottom: 1px solid #f5f5f5; }
+        .history-item.ok  { color: var(--success); }
+        .history-item.err { color: var(--danger); }
+
+        /* ── SIDEBAR / TIENDA ── */
+        .sidebar { width: 280px; min-width: 240px; }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #999;
+            margin-bottom: 14px;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 10px;
+            border-radius: 10px;
+            background: #f9fafc;
+            border-left: 3px solid var(--accent);
+            margin-bottom: 10px;
+            transition: background 0.2s;
+        }
+        .shop-item:hover { background: #eef5ff; }
+        .shop-item.locked { border-left-color: #ccc; opacity: 0.7; }
+        .shop-item-info strong { font-size: 0.85rem; }
+        .shop-item-info small  { display: block; color: #aaa; font-size: 0.72rem; margin-top: 2px; }
+        .btn-shop {
+            padding: 7px 12px;
+            font-size: 0.75rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn-shop:hover    { background: #217dbb; }
+        .btn-shop:disabled { background: #ccc; cursor: default; }
+
+        /* ── LOGROS ── */
+        .achievements {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .badge {
+            font-size: 1.2rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 6px 8px;
+            cursor: default;
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .badge:hover { transform: scale(1.15); }
+        .badge.locked { filter: grayscale(1) opacity(0.35); }
+        .badge-tip {
+            display: none;
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            font-size: 0.6rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .badge:hover .badge-tip { display: block; }
+
+        /* ── MODO ── */
+        .mode-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .mode-tab {
+            flex: 1;
+            padding: 7px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1.5px solid #ddd;
+            background: #f9f9f9;
+            color: #999;
+            transition: all 0.2s;
+            letter-spacing: 0.05em;
+        }
+        .mode-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ── FLOATING POINTS ── */
+        .float-pts {
+            position: fixed;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--success);
+            pointer-events: none;
+            z-index: 999;
+            animation: float-up 1.2s ease forwards;
+        }
+        @keyframes float-up {
+            0%   { opacity:1; transform:translateY(0); }
+            100% { opacity:0; transform:translateY(-60px); }
+        }
+
+        footer {
+            color: #ccc;
+            font-size: 0.65rem;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-<!-- CAPA DE BOOT -->
-<div id="boot-screen">
-    <div class="boot-content">
-        <div class="boot-logo">ARCHIVO_404</div>
-        <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
-        <div class="boot-log" id="boot-log"></div>
+<header>
+    <h1>MathTrainer <span>Academic Edition</span></h1>
+    <span class="header-badge">● SESIÓN ACTIVA</span>
+</header>
+
+<div class="stats-bar">
+    <div class="stat-item">
+        <span class="stat-label">Sesión</span>
+        <span class="stat-value blue" id="sesion-id">#8821</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">Puntos</span>
+        <span class="stat-value green" id="puntos-val">200</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">Nivel</span>
+        <span class="stat-value" id="nivel-val">1</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">Precisión</span>
+        <span class="stat-value gold" id="precision-val">—</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">Correctas</span>
+        <span class="stat-value" id="correctas-val">0</span>
     </div>
 </div>
 
-<!-- CAPA DE PÁNICO -->
-<div id="panic-layer">
-    <div class="glitch-text" data-text="CRITICAL_ERROR">CRITICAL_ERROR</div>
-    <p class="panic-sub">WIPING_ALL_SECTORS...</p>
-</div>
+<div class="main-wrap">
 
-<!-- MODAL CLAVE 404 -->
-<div id="key-modal-overlay" class="key-modal-overlay" onclick="closeKeyModal()">
-    <div class="key-modal" onclick="event.stopPropagation()">
-        <div class="key-modal-icon">🔐</div>
-        <h3>ACCESO ENCRIPTADO</h3>
-        <p>INGRESA LA CLAVE DE SEGURIDAD</p>
-        <input type="password" id="key-input" placeholder="····" maxlength="10" autocomplete="off">
-        <button class="primary-btn" onclick="submitKey()">VERIFICAR IDENTIDAD</button>
-        <p id="key-error">⚠ CLAVE INCORRECTA — ACCESO DENEGADO</p>
-    </div>
-</div>
+    <!-- ── PANEL PRINCIPAL ── -->
+    <div class="card" style="flex:2;min-width:300px;">
 
-<!-- MODAL VISOR DE FOTO (LIGHTBOX) -->
-<div id="lightbox" class="lightbox-overlay" onclick="closeLightbox()">
-    <div class="lightbox-content" onclick="event.stopPropagation()">
-        <button class="lightbox-close" onclick="closeLightbox()">×</button>
-        <div id="lightbox-media"></div>
-        <div id="lightbox-name"></div>
-    </div>
-</div>
-
-<!-- SIDEBAR -->
-<nav class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-        <span class="logo-icon">⬡</span>
-        <span class="logo-text">A404</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-files')">
-        <span class="side-icon">📂</span><span class="side-label">BÓVEDA</span>
-    </div>
-    <div class="side-item" onclick="openGallery()">
-        <span class="side-icon">🎞</span><span class="side-label">GALERÍA</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-audio')">
-        <span class="side-icon">🎵</span><span class="side-label">FRECUENCIAS</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-stream')">
-        <span class="side-icon">📺</span><span class="side-label">STREAM</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-notes')">
-        <span class="side-icon">📝</span><span class="side-label">BITÁCORA</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-tasks')">
-        <span class="side-icon">🎯</span><span class="side-label">OBJETIVOS</span>
-    </div>
-    <div class="side-divider"></div>
-    <div class="side-item" onclick="toggleSentinel()">
-        <span class="side-icon sentinel-icon">🛡</span><span class="side-label">CENTINELA</span>
-    </div>
-    <div class="side-item danger-item" onclick="panicAbort()">
-        <span class="side-icon">⏻</span><span class="side-label">ABORTAR</span>
-    </div>
-</nav>
-
-<!-- ÁREA PRINCIPAL -->
-<main class="main-stage">
-    <header class="system-header">
-        <div class="title-group">
-            <h1 class="main-title" data-text="ARCHIVO 404">ARCHIVO 404</h1>
-            <p class="subtitle">USER: LENIN // STATUS: <span class="status-online">ENCRYPTED ●</span></p>
-        </div>
-        <div class="header-right">
-            <div class="status-badge" id="uptime">UPTIME: 00:00:00</div>
-            <div class="firebase-badge" id="fb-status">⬤ CONECTANDO...</div>
-        </div>
-    </header>
-
-    <section class="terminal-container">
-        <div class="terminal-topbar">
-            <span class="terminal-dot red"></span>
-            <span class="terminal-dot yellow"></span>
-            <span class="terminal-dot green"></span>
-            <span class="terminal-title">CORE_TERMINAL v3.0</span>
-        </div>
-        <div id="output-stream"></div>
-        <div class="input-line">
-            <span class="prompt">root@404:~$</span>
-            <input type="text" id="main-input" placeholder="ingrese comando..." autocomplete="off" spellcheck="false">
-        </div>
-    </section>
-</main>
-
-<!-- ═══════════════════ VENTANAS FLOTANTES ═══════════════════ -->
-
-<!-- BÓVEDA -->
-<div id="w-files" class="win" style="top:8%;left:12%;width:680px;height:500px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📂</span><span class="win-title">SECTORES DE MEMORIA</span></div>
-        <div class="win-controls">
-            <button class="enc-toggle-btn" id="vault-enc-btn" onclick="toggleVaultEncrypted()">🔒 CIFRADOS</button>
-            <button class="win-btn close" onclick="closeWin('w-files')"></button>
-        </div>
-    </div>
-    <div class="win-body">
-        <input type="text" id="file-filter" placeholder="FILTRAR SECTORES..." oninput="renderVault()" class="search-input">
-        <div id="vault-grid" class="grid-view"></div>
-    </div>
-</div>
-
-<!-- EDITOR -->
-<div id="w-editor" class="win" style="top:12%;left:18%;width:740px;height:540px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">✏</span><span class="win-title" id="edit-filename">EDITOR DE DATOS</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-editor')"></button></div>
-    </div>
-    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="editor-field" class="editor-textarea" spellcheck="false"></textarea>
-        <button class="primary-btn" onclick="commitFile()">⟳ SINCRONIZAR CAMBIOS</button>
-    </div>
-</div>
-
-<!-- GALERÍA -->
-<div id="w-gallery" class="win" style="top:5%;left:8%;width:900px;height:620px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎞</span><span class="win-title">GALERÍA VISUAL</span></div>
-        <div class="win-controls">
-            <button class="enc-toggle-btn" id="gallery-enc-btn" onclick="toggleGalleryEncrypted()">🔒 CIFRADOS</button>
-            <button class="win-btn close" onclick="closeWin('w-gallery')"></button>
-        </div>
-    </div>
-    <div class="win-body gallery-body">
-        <div class="gallery-section">
-            <div class="gallery-section-title">📷 IMÁGENES</div>
-            <div id="gallery-photos" class="gallery-grid"></div>
-        </div>
-        <div class="gallery-section">
-            <div class="gallery-section-title">🎬 VIDEOS</div>
-            <div id="gallery-videos" class="gallery-grid"></div>
-        </div>
-    </div>
-</div>
-
-<!-- FRECUENCIAS -->
-<div id="w-audio" class="win" style="top:45%;left:35%;width:460px;height:360px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎵</span><span class="win-title">FRECUENCIAS DE AUDIO</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-audio')"></button></div>
-    </div>
-    <div class="win-body audio-body">
-        <div class="audio-player-wrap">
-            <div id="now-playing" class="now-playing">— SIN PISTA ACTIVA —</div>
-            <audio id="audio-player" controls></audio>
-        </div>
-        <div id="audio-list" class="audio-list"></div>
-    </div>
-</div>
-
-<!-- ═══ PANEL STREAM DE VIDEO ═══ -->
-<div id="w-stream" class="win" style="top:3%;left:5%;width:1100px;height:680px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📺</span><span class="win-title">STREAM — MONITOR DE VIDEO</span></div>
-        <div class="win-controls">
-            <button class="win-btn close" onclick="closeWin('w-stream')"></button>
-        </div>
-    </div>
-    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;padding:12px;">
-
-        <!-- Barra de agregar URL -->
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <input type="text" id="stream-url-input" placeholder="Pega URL de YouTube, Twitch, cualquier video..." autocomplete="off"
-                style="flex:1;min-width:200px;background:var(--bg2,#111);color:var(--fg,#1a1a1a);border:1px solid var(--accent,#ff003c);padding:7px 12px;font-family:inherit;font-size:0.7rem;border-radius:4px;outline:none;">
-            <input type="text" id="stream-label-input" placeholder="Nombre (opcional)" autocomplete="off"
-                style="width:160px;background:var(--bg2,#111);color:var(--fg,#1a1a1a);border:1px solid #333;padding:7px 12px;font-family:inherit;font-size:0.7rem;border-radius:4px;outline:none;">
-            <button onclick="addStreamPanel()" class="primary-btn" style="white-space:nowrap;padding:7px 16px;">+ AGREGAR</button>
-            <button onclick="clearAllPanels()" style="background:transparent;color:#666;border:1px solid #333;padding:7px 12px;font-family:inherit;font-size:0.65rem;border-radius:4px;cursor:pointer;white-space:nowrap;">✕ LIMPIAR TODO</button>
-            <span id="stream-count" style="color:#555;font-size:0.6rem;white-space:nowrap;">0 / 10 STREAMS</span>
+        <div class="mode-tabs">
+            <div class="mode-tab active" onclick="setModo('algebra')"    id="tab-algebra">ÁLGEBRA</div>
+            <div class="mode-tab"        onclick="setModo('aritmetica')" id="tab-aritmetica">ARITMÉTICA</div>
+            <div class="mode-tab"        onclick="setModo('logica')"     id="tab-logica">LÓGICA</div>
         </div>
 
-        <!-- Mosaico de reproductores -->
-        <div id="stream-grid" style="
-            flex:1;
-            display:grid;
-            grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-            gap:8px;
-            overflow-y:auto;
-            min-height:400px;
-        "></div>
-
-        <div id="stream-empty" style="color:#333;font-size:0.65rem;text-align:center;padding:40px;letter-spacing:0.15em;">
-            SIN STREAMS — AGREGA UNA URL ARRIBA
+        <div class="level-header">
+            <div class="level-tag" id="nivel-tag">NIVEL 1 — BÁSICO</div>
+            <span style="font-size:0.7rem;color:#aaa;" id="xp-text">0 / 100 XP</span>
         </div>
-    </div>
-</div>
+        <div class="xp-bar-wrap">
+            <div class="xp-bar" id="xp-bar" style="width:0%"></div>
+        </div>
 
-<!-- BITÁCORA -->
-<div id="w-notes" class="win" style="top:18%;left:38%;width:500px;height:420px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📝</span><span class="win-title">BITÁCORA</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-notes')"></button></div>
-    </div>
-    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="txt-notes" class="editor-textarea" placeholder="Notas del operador..."></textarea>
-        <button class="primary-btn" onclick="saveStatic('notes')">GUARDAR BITÁCORA</button>
-    </div>
-</div>
+        <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">
+            Resuelve la ecuación. Encuentra el valor de <b>X</b> (0 – 100):
+        </p>
 
-<!-- OBJETIVOS -->
-<div id="w-tasks" class="win" style="top:22%;left:42%;width:500px;height:420px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎯</span><span class="win-title">OBJETIVOS</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-tasks')"></button></div>
-    </div>
-    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="txt-tasks" class="editor-textarea" placeholder="Objetivos del sistema..."></textarea>
-        <button class="primary-btn" onclick="saveStatic('tasks')">GUARDAR OBJETIVOS</button>
-    </div>
-</div>
+        <div class="math-box" id="ecuacion">Iniciando módulo...</div>
 
-<!-- CREADOR -->
-<div id="w-creador" class="win" style="top:3%;left:4%;width:1000px;height:640px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">⚙</span><span class="win-title">PANEL DE ADMINISTRACIÓN — NÚCLEO</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-creador')"></button></div>
-    </div>
-    <div class="win-body creador-body">
-        <div class="creador-grid">
-            <div class="upload-sector" id="sector-txt">
-                <div class="sector-header"><span class="sector-icon">📄</span> ARCHIVO DE TEXTO</div>
-                <input type="text" id="up-name-txt" placeholder="Nombre del archivo">
-                <div class="drop-zone" id="drop-txt" onclick="document.getElementById('upload-txt').click()">
-                    <span class="drop-icon">📄</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-txt-name">Acepta .txt .md .json .csv</span>
-                </div>
-                <input type="file" id="upload-txt" style="display:none" accept=".txt,.md,.json,.csv,.log" onchange="handleUpload(this,'txt')">
-                <label class="enc-label"><input type="checkbox" id="enc-txt"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('txt')">REGISTRAR → BÓVEDA</button>
-                <div class="upload-progress" id="prog-txt"><div class="prog-bar" id="progbar-txt"></div></div>
+        <div class="timer-wrap">
+            <div class="timer-bar-wrap">
+                <div class="timer-bar" id="timer-bar" style="width:100%"></div>
             </div>
-            <div class="upload-sector" id="sector-img">
-                <div class="sector-header"><span class="sector-icon">🖼</span> IMAGEN → GALERÍA</div>
-                <input type="text" id="up-name-img" placeholder="Nombre de la imagen">
-                <div class="drop-zone" id="drop-img" onclick="document.getElementById('upload-img').click()">
-                    <span class="drop-icon">🖼</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-img-name">Acepta jpg png gif webp</span>
-                </div>
-                <input type="file" id="upload-img" style="display:none" accept="image/*" onchange="handleUpload(this,'img')">
-                <label class="enc-label"><input type="checkbox" id="enc-img"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('img')">REGISTRAR → GALERÍA</button>
-                <div class="upload-progress" id="prog-img"><div class="prog-bar" id="progbar-img"></div></div>
-            </div>
-            <div class="upload-sector" id="sector-vid">
-                <div class="sector-header"><span class="sector-icon">🎬</span> VIDEO → GALERÍA</div>
-                <input type="text" id="up-name-vid" placeholder="Nombre del video">
-                <div class="drop-zone" id="drop-vid" onclick="document.getElementById('upload-vid').click()">
-                    <span class="drop-icon">🎬</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-vid-name">Acepta mp4 webm mov</span>
-                </div>
-                <input type="file" id="upload-vid" style="display:none" accept="video/*" onchange="handleUpload(this,'vid')">
-                <label class="enc-label"><input type="checkbox" id="enc-vid"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('vid')">REGISTRAR → GALERÍA</button>
-                <div class="upload-progress" id="prog-vid"><div class="prog-bar" id="progbar-vid"></div></div>
-            </div>
-            <div class="upload-sector" id="sector-aud">
-                <div class="sector-header"><span class="sector-icon">🎵</span> MÚSICA → FRECUENCIAS</div>
-                <input type="text" id="up-name-aud" placeholder="Nombre de la pista">
-                <div class="drop-zone" id="drop-aud" onclick="document.getElementById('upload-aud').click()">
-                    <span class="drop-icon">🎵</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-aud-name">Acepta mp3 wav ogg flac</span>
-                </div>
-                <input type="file" id="upload-aud" style="display:none" accept="audio/*" onchange="handleUpload(this,'aud')">
-                <label class="enc-label"><input type="checkbox" id="enc-aud"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('aud')">REGISTRAR → FRECUENCIAS</button>
-                <div class="upload-progress" id="prog-aud"><div class="prog-bar" id="progbar-aud"></div></div>
-            </div>
+            <span class="timer-text" id="timer-text">30s</span>
         </div>
-        <div class="cmd-sector">
-            <div class="sector-header"><span class="sector-icon">⌨</span> VINCULAR COMANDO TERMINAL</div>
-            <div class="cmd-row">
-                <input type="text" id="cmd-name" placeholder="Nombre del comando (ej: saludo)">
-                <textarea id="cmd-res" placeholder="Respuesta del sistema..."></textarea>
-                <button class="primary-btn" onclick="saveCommand()">VINCULAR PROTOCOLO</button>
-            </div>
+
+        <div class="input-group">
+            <input type="number" id="user-input" placeholder="Valor de X..." min="0" max="100"
+                onkeypress="handleKey(event)">
+            <button class="btn-primary" onclick="verificar()">ENVIAR</button>
         </div>
+
+        <div id="log"></div>
+
+        <div class="streak-wrap">
+            <span style="margin-right:4px;">Racha:</span>
+            <div class="streak-dot" id="sd0"></div>
+            <div class="streak-dot" id="sd1"></div>
+            <div class="streak-dot" id="sd2"></div>
+            <div class="streak-dot" id="sd3"></div>
+            <div class="streak-dot" id="sd4"></div>
+            <span id="streak-text" style="margin-left:6px;color:#f39c12;font-weight:700;"></span>
+        </div>
+
+        <div class="history-list" id="history-list"></div>
+    </div>
+
+    <!-- ── SIDEBAR ── -->
+    <div class="card sidebar">
+
+        <div class="section-title">🛒 Tienda Académica</div>
+
+        <div class="shop-item" id="shop-revelar">
+            <div class="shop-item-info">
+                <strong>Revelar Coeficiente</strong>
+                <small>Costo: 200 pts — Muestra X actual</small>
+            </div>
+            <button class="btn-shop" onclick="comprar(200,'revelar')">Comprar</button>
+        </div>
+
+        <div class="shop-item" id="shop-multi">
+            <div class="shop-item-info">
+                <strong>Multiplicador ×2</strong>
+                <small>Costo: 500 pts — Doble XP (5 rondas)</small>
+            </div>
+            <button class="btn-shop" onclick="comprar(500,'multi')">Comprar</button>
+        </div>
+
+        <div class="shop-item" id="shop-escudo">
+            <div class="shop-item-info">
+                <strong>Escudo de Racha</strong>
+                <small>Costo: 150 pts — Protege 1 error</small>
+            </div>
+            <button class="btn-shop" onclick="comprar(150,'escudo')">Comprar</button>
+        </div>
+
+        <div class="shop-item" id="shop-tiempo">
+            <div class="shop-item-info">
+                <strong>+15 Segundos</strong>
+                <small>Costo: 100 pts — Amplía el timer</small>
+            </div>
+            <button class="btn-shop" onclick="comprar(100,'tiempo')">Comprar</button>
+        </div>
+
+        <div class="shop-item locked" id="shop-trig">
+            <div class="shop-item-info">
+                <strong>Modo Trigonometría 🔒</strong>
+                <small>Costo: 1000 pts — Nivel 5 requerido</small>
+            </div>
+            <button class="btn-shop" onclick="comprar(1000,'modo')" id="btn-trig">Comprar</button>
+        </div>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid #f0f0f0;">
+
+        <div class="section-title">🏅 Logros</div>
+        <div class="achievements">
+            <div class="badge locked" id="badge-10"  >🔥<div class="badge-tip">10 correctas seguidas</div></div>
+            <div class="badge locked" id="badge-speed">⚡<div class="badge-tip">Responde en menos de 5s</div></div>
+            <div class="badge locked" id="badge-1k"  >💎<div class="badge-tip">1000 puntos acumulados</div></div>
+            <div class="badge locked" id="badge-lv5" >🎓<div class="badge-tip">Alcanza nivel 5</div></div>
+            <div class="badge locked" id="badge-shop" >🛍<div class="badge-tip">Primera compra</div></div>
+        </div>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid #f0f0f0;">
+
+        <div class="section-title">📊 Estadísticas</div>
+        <div style="font-size:0.78rem;line-height:2;color:#666;">
+            <div>Intentos totales: <b id="stat-total">0</b></div>
+            <div>Mejor racha: <b id="stat-best">0</b></div>
+            <div>Tiempo promedio: <b id="stat-avg">—</b></div>
+        </div>
+
     </div>
 </div>
 
-<!-- ═══ SCRIPTS ═══ -->
-<script type="module" src="js/firebase.js"></script>
-<script src="js/app.js"></script>
+<footer>v4.2.1 — MathTrainer Academic Edition — System Status: Online ● All modules nominal</footer>
+
+<script>
+"use strict";
+
+// ── ESTADO ────────────────────────────────────────────────
+let puntos      = parseInt(localStorage.getItem('mt_pts'))   || 200;
+let nivel       = parseInt(localStorage.getItem('mt_nivel')) || 1;
+let xp          = parseInt(localStorage.getItem('mt_xp'))    || 0;
+let racha       = 0;
+let mejorRacha  = parseInt(localStorage.getItem('mt_best'))  || 0;
+let totalIntentos = 0;
+let correctas   = 0;
+let escudoActivo = false;
+let multiActivo  = 0;
+let tiempoExtra  = 0;
+let timerInterval = null;
+let timerActual   = 30;
+let tiempoInicio  = 0;
+let tiemposSuma   = 0;
+let tiemposCount  = 0;
+let modo = 'algebra';
+let numeroSecreto = 0;
+let compraPrimeraHecha = false;
+
+// ── INIT ─────────────────────────────────────────────────
+window.onload = () => {
+    actualizarUI();
+    iniciarNivel();
+};
+
+// ── MODOS ────────────────────────────────────────────────
+function setModo(m) {
+    modo = m;
+    ['algebra','aritmetica','logica'].forEach(t => {
+        document.getElementById('tab-'+t).classList.toggle('active', t === m);
+    });
+    iniciarNivel();
+    log('');
+}
+
+// ── GENERA ECUACIÓN ──────────────────────────────────────
+function iniciarNivel() {
+    clearTimer();
+    numeroSecreto = Math.floor(Math.random() * 101);
+    let eq = '';
+
+    if (modo === 'algebra') {
+        const ops = ['+', '-', '*'];
+        const a = rnd(1,12), b = rnd(1,12), c = rnd(1,6);
+        const op = ops[rnd(0,2)];
+        eq = `${a}X ${op} ${b} = ${a * numeroSecreto} ${op} ${b}`.replace(
+            `${a * numeroSecreto} ${op} ${b}`,
+            evalStr(`${a * numeroSecreto} ${op} ${b}`)
+        );
+        // Más simple: presentar directamente
+        const res = evalStr(`${a} * ${numeroSecreto} + ${b} - ${c}`);
+        eq = `${a}X + ${b} - ${c} = ${res}`;
+    } else if (modo === 'aritmetica') {
+        const a = rnd(2,15), b = rnd(1,10);
+        const res = a * numeroSecreto + b;
+        eq = `${a} × X + ${b} = ${res}`;
+    } else {
+        // Lógica: secuencia
+        const base = rnd(1,8);
+        eq = `Patrón: ${base}, ${base*2}, ${base*4}, X = ?`;
+        numeroSecreto = Math.min(base * 8, 100);
+    }
+
+    const box = document.getElementById('ecuacion');
+    box.className = 'math-box';
+    box.innerText = eq;
+
+    document.getElementById('user-input').value = '';
+    document.getElementById('user-input').focus();
+
+    startTimer(30 + tiempoExtra);
+    tiempoInicio = Date.now();
+    tiempoExtra = 0;
+}
+
+function evalStr(expr) {
+    try { return Function('"use strict"; return (' + expr + ')')(); }
+    catch(e) { return 0; }
+}
+
+function rnd(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// ── TIMER ────────────────────────────────────────────────
+function startTimer(secs) {
+    clearTimer();
+    timerActual = secs;
+    const bar  = document.getElementById('timer-bar');
+    const txt  = document.getElementById('timer-text');
+    const total = secs;
+    bar.style.background = 'var(--success)';
+
+    timerInterval = setInterval(() => {
+        timerActual--;
+        const pct = (timerActual / total) * 100;
+        bar.style.width = pct + '%';
+        txt.textContent = timerActual + 's';
+
+        if (pct < 40) bar.style.background = 'var(--warning)';
+        if (pct < 20) bar.style.background = 'var(--danger)';
+
+        if (timerActual <= 0) {
+            clearTimer();
+            bar.style.width = '0%';
+            logMsg('⏱ Tiempo agotado. −5 pts', 'red');
+            puntos = Math.max(0, puntos - 5);
+            perderRacha();
+            totalIntentos++;
+            actualizarUI();
+            addHistory('⏱ Tiempo', false);
+            setTimeout(iniciarNivel, 1200);
+        }
+    }, 1000);
+}
+
+function clearTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+// ── VERIFICAR ────────────────────────────────────────────
+function handleKey(e) { if (e.key === 'Enter') verificar(); }
+
+function verificar() {
+    const inp = document.getElementById('user-input');
+    const val = inp.value.trim();
+
+    // Puerta secreta — sin cambios visibles
+    if (val === '404') {
+        inp.value = '';
+        window.location.href = 'archivo404.html';
+        return;
+    }
+
+    totalIntentos++;
+    const num = parseInt(val);
+    const elapsed = ((Date.now() - tiempoInicio) / 1000).toFixed(1);
+
+    if (num === numeroSecreto) {
+        clearTimer();
+        let pts = 20 * (multiActivo > 0 ? 2 : 1);
+        if (elapsed < 5) pts += 10; // bonus velocidad
+
+        puntos += pts;
+        xp     += pts;
+        correctas++;
+        racha++;
+        if (racha > mejorRacha) { mejorRacha = racha; localStorage.setItem('mt_best', mejorRacha); }
+        if (multiActivo > 0) multiActivo--;
+
+        tiemposSuma += parseFloat(elapsed);
+        tiemposCount++;
+
+        logMsg(`✓ Correcto en ${elapsed}s! +${pts} pts`, 'green');
+        document.getElementById('ecuacion').classList.add('correct');
+        floatPts(`+${pts}`, inp);
+        addHistory(`✓ X=${numeroSecreto} (${elapsed}s)`, true);
+        checkAchievements(elapsed);
+        actualizarUI();
+        setTimeout(iniciarNivel, 1100);
+
+    } else {
+        if (escudoActivo) {
+            escudoActivo = false;
+            logMsg('🛡 Escudo activado — error absorbido', 'orange');
+        } else {
+            perderRacha();
+            logMsg(`✗ Incorrecto. X era ${numeroSecreto}`, 'red');
+            document.getElementById('ecuacion').classList.add('wrong');
+            addHistory(`✗ X=${numeroSecreto}`, false);
+        }
+        actualizarUI();
+        setTimeout(() => {
+            document.getElementById('ecuacion').classList.remove('wrong');
+        }, 500);
+    }
+
+    inp.value = '';
+}
+
+function perderRacha() { racha = 0; }
+
+// ── XP / NIVEL ───────────────────────────────────────────
+function calcNivel() {
+    const thresholds = [0,100,250,500,900,1500];
+    for (let i = thresholds.length-1; i >= 0; i--) {
+        if (xp >= thresholds[i]) return { nivel: i+1, base: thresholds[i], next: thresholds[i+1] || thresholds[i]+500 };
+    }
+    return { nivel: 1, base: 0, next: 100 };
+}
+
+// ── UI ───────────────────────────────────────────────────
+function actualizarUI() {
+    const nv = calcNivel();
+    nivel = nv.nivel;
+    const pct = Math.min(((xp - nv.base) / (nv.next - nv.base)) * 100, 100);
+
+    document.getElementById('puntos-val').innerText  = puntos;
+    document.getElementById('nivel-val').innerText   = nivel;
+    document.getElementById('correctas-val').innerText = correctas;
+    document.getElementById('xp-bar').style.width   = pct + '%';
+    document.getElementById('xp-text').innerText    = `${xp - nv.base} / ${nv.next - nv.base} XP`;
+    document.getElementById('stat-total').innerText = totalIntentos;
+    document.getElementById('stat-best').innerText  = mejorRacha;
+    document.getElementById('stat-avg').innerText   = tiemposCount ? (tiemposSuma/tiemposCount).toFixed(1)+'s' : '—';
+    document.getElementById('sesion-id').innerText  = '#' + (8000 + Math.floor(xp/10));
+
+    const nivNames = ['','BÁSICO','INTERMEDIO','AVANZADO','EXPERTO','MAESTRO','ÉLITE'];
+    document.getElementById('nivel-tag').innerText  = `NIVEL ${nivel} — ${nivNames[nivel] || 'ÉLITE'}`;
+
+    const prec = totalIntentos ? Math.round((correctas/totalIntentos)*100) : 0;
+    document.getElementById('precision-val').innerText = totalIntentos ? prec+'%' : '—';
+
+    // Racha dots
+    for (let i = 0; i < 5; i++) {
+        document.getElementById('sd'+i).classList.toggle('on', racha > i);
+    }
+    document.getElementById('streak-text').innerText = racha >= 3 ? `🔥 ×${racha}` : '';
+
+    // Desbloquear trig si nivel 5
+    const btnTrig = document.getElementById('btn-trig');
+    if (nivel >= 5) {
+        document.getElementById('shop-trig').classList.remove('locked');
+        btnTrig.disabled = false;
+    } else {
+        btnTrig.disabled = true;
+    }
+
+    localStorage.setItem('mt_pts',   puntos);
+    localStorage.setItem('mt_nivel', nivel);
+    localStorage.setItem('mt_xp',    xp);
+}
+
+// ── HISTORIAL ────────────────────────────────────────────
+function addHistory(txt, ok) {
+    const list = document.getElementById('history-list');
+    const el = document.createElement('div');
+    el.className = 'history-item ' + (ok ? 'ok' : 'err');
+    el.innerText = new Date().toLocaleTimeString() + ' — ' + txt;
+    list.prepend(el);
+    if (list.children.length > 6) list.lastChild.remove();
+}
+
+// ── LOG ──────────────────────────────────────────────────
+function logMsg(msg, color) {
+    const el = document.getElementById('log');
+    el.style.color = color === 'green' ? 'var(--success)'
+                   : color === 'red'   ? 'var(--danger)'
+                   : color === 'orange'? 'var(--warning)'
+                   : '#888';
+    el.innerText = msg;
+}
+function log(msg) { document.getElementById('log').innerText = msg; }
+
+// ── FLOAT PUNTOS ─────────────────────────────────────────
+function floatPts(text, anchor) {
+    const el = document.createElement('div');
+    el.className = 'float-pts';
+    el.innerText = text;
+    const r = anchor.getBoundingClientRect();
+    el.style.left = r.left + 'px';
+    el.style.top  = (r.top + window.scrollY - 20) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1300);
+}
+
+// ── TIENDA ───────────────────────────────────────────────
+function comprar(costo, tipo) {
+    if (puntos < costo) { logMsg('Puntos insuficientes. Sigue practicando.', 'red'); return; }
+    puntos -= costo;
+    if (!compraPrimeraHecha) { compraPrimeraHecha = true; desbloquearBadge('badge-shop'); }
+
+    if (tipo === 'revelar') {
+        logMsg(`💡 Coeficiente X = ${numeroSecreto}`, 'orange');
+    } else if (tipo === 'multi') {
+        multiActivo = 5;
+        logMsg('⚡ Multiplicador ×2 activo por 5 rondas.', 'green');
+    } else if (tipo === 'escudo') {
+        escudoActivo = true;
+        logMsg('🛡 Escudo activado. Próximo error absorbido.', 'green');
+    } else if (tipo === 'tiempo') {
+        tiempoExtra = 15;
+        timerActual += 15;
+        logMsg('+15s agregados al timer.', 'green');
+    } else if (tipo === 'modo') {
+        if (nivel < 5) { logMsg('Requiere nivel 5.', 'red'); puntos += costo; actualizarUI(); return; }
+        setModo('logica');
+        logMsg('🔢 Modo Trigonometría/Lógica activado.', 'green');
+    }
+    actualizarUI();
+}
+
+// ── LOGROS ───────────────────────────────────────────────
+function checkAchievements(elapsed) {
+    if (racha >= 10)     desbloquearBadge('badge-10');
+    if (elapsed < 5)     desbloquearBadge('badge-speed');
+    if (puntos >= 1000)  desbloquearBadge('badge-1k');
+    if (nivel >= 5)      desbloquearBadge('badge-lv5');
+}
+function desbloquearBadge(id) {
+    document.getElementById(id)?.classList.remove('locked');
+}
+</script>
 </body>
 </html>
-

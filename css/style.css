@@ -1,478 +1,581 @@
-/* ═══════════════════════════════════════════
-   ARCHIVO 404 — CORE STYLESHEET
-   PROPIETARIO: LENIN
-   ═══════════════════════════════════════════ */
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ff003c">
+    <meta name="description" content="CORE_SYSTEM - Acceso Clasificado">
+    <title>ARCHIVO 404 | CORE_SYSTEM v3.5</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Fira+Code:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body oncontextmenu="return false;">
 
-:root {
-    --bg-deep:    #020202;
-    --bg-soft:    #080808;
-    --bg-card:    #0a0a0a;
-    --accent:     #ff003c;
-    --accent-dim: rgba(255, 0, 60, 0.15);
-    --accent-glow:rgba(255, 0, 60, 0.4);
-    --gold:       #ffcc00;
-    --green:      #00ff88;
-    --border:     #1a1a1a;
-    --border-mid: #222;
-    --text-main:  #e0e0e0;
-    --text-dim:   #444;
-    --text-mid:   #888;
-    --font-mono:  'Share Tech Mono', 'Consolas', monospace;
-    --font-hud:   'Orbitron', monospace;
-    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
+    <div id="boot-screen">
+        <div class="boot-content">
+            <div class="boot-logo glitch" data-text="ARCHIVO_404">ARCHIVO_404</div>
+            <div class="boot-subtitle">INICIALIZANDO NÚCLEO...</div>
+            <div class="boot-bar-wrap">
+                <div class="boot-bar" id="boot-bar"></div>
+            </div>
+            <div class="boot-details">
+                <span>MEM: OK</span> | <span>CPU: ALINEANDO</span> | <span>RED: BUSCANDO</span>
+            </div>
+            <div class="boot-log" id="boot-log">
+                > Cargando módulos de seguridad...<br>
+                > Desencriptando sectores primarios...
+            </div>
+        </div>
+    </div>
 
-* { margin:0; padding:0; box-sizing:border-box; cursor:crosshair; }
+    <div id="panic-layer">
+        <div class="panic-container">
+            <div class="panic-icon">⚠</div>
+            <div class="glitch-text" data-text="CRITICAL_ERROR">CRITICAL_ERROR</div>
+            <p class="panic-sub">WIPING_ALL_SECTORS...</p>
+            <div class="panic-progress">
+                <div class="panic-progress-bar"></div>
+            </div>
+            <p class="panic-terminal">Purga de datos al 45%... No apague el sistema.</p>
+        </div>
+    </div>
 
-::-webkit-scrollbar { width:3px; height:3px; }
-::-webkit-scrollbar-track { background:var(--bg-deep); }
-::-webkit-scrollbar-thumb { background:var(--accent); border-radius:2px; }
+    <div id="key-modal-overlay" class="key-modal-overlay" onclick="closeKeyModal()">
+        <div class="key-modal" onclick="event.stopPropagation()">
+            <div class="key-modal-header">
+                <span class="key-modal-icon">🔐</span>
+                <span class="key-modal-title">SISTEMA CIFRADO</span>
+            </div>
+            <div class="key-modal-body">
+                <h3>VERIFICACIÓN REQUERIDA</h3>
+                <p>SECTOR RESTRINGIDO. INGRESA CREDENCIALES NIVEL 4.</p>
+                <div class="input-wrapper">
+                    <input type="password" id="key-input" placeholder="INGRESE CLAVE..." maxlength="10" autocomplete="off">
+                    <span class="input-cursor"></span>
+                </div>
+                <button class="primary-btn btn-glitch" onclick="submitKey()">VERIFICAR IDENTIDAD</button>
+                <p id="key-error" class="hidden">⚠ CLAVE INCORRECTA — ACCESO DENEGADO</p>
+            </div>
+        </div>
+    </div>
 
-body {
-    background:var(--bg-deep);
-    color:var(--text-main);
-    font-family:var(--font-mono);
-    height:100vh; width:100vw;
-    overflow:hidden;
-    display:flex;
-    background-image:
-        linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.08) 50%),
-        linear-gradient(90deg, rgba(255,0,0,0.015), rgba(0,255,0,0.008), rgba(0,0,255,0.015));
-    background-size:100% 3px, 3px 100%;
-}
+    <div id="lightbox" class="lightbox-overlay" onclick="closeLightbox()">
+        <div class="lightbox-toolbar" onclick="event.stopPropagation()">
+            <span id="lightbox-name">archivo.png</span>
+            <div class="lightbox-controls">
+                <button class="icon-btn" title="Descargar">⬇</button>
+                <button class="icon-btn" title="Pantalla Completa">⛶</button>
+                <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+            </div>
+        </div>
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <div id="lightbox-media">
+                </div>
+        </div>
+    </div>
 
-/* ── BOOT SCREEN ── */
-#boot-screen {
-    position:fixed; inset:0;
-    background:#000;
-    z-index:99998;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-.boot-content { width:480px; text-align:center; }
-.boot-logo {
-    font-family:var(--font-hud);
-    font-size:3rem;
-    font-weight:900;
-    color:var(--accent);
-    letter-spacing:8px;
-    margin-bottom:30px;
-    text-shadow:0 0 40px var(--accent-glow);
-}
-.boot-bar-wrap {
-    width:100%;
-    height:2px;
-    background:#111;
-    margin-bottom:20px;
-    overflow:hidden;
-}
-.boot-bar { height:100%; width:0; background:var(--accent); transition:width 0.1s linear; }
-.boot-log { font-size:0.65rem; color:#333; min-height:60px; text-align:left; }
-.boot-log div { margin-bottom:3px; animation:fadeIn 0.2s ease; }
+    <div id="custom-context-menu" class="context-menu hidden">
+        <div class="ctx-item" onclick="openWin('w-sys')">⚙ Inspeccionar Sistema</div>
+        <div class="ctx-item" onclick="openWin('w-ia')">🤖 Invocar IA</div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item danger" onclick="panicAbort()">☠ Forzar Pánico</div>
+    </div>
 
-/* ── PANIC LAYER ── */
-#panic-layer {
-    display:none; position:fixed; inset:0;
-    background:#000; z-index:99999;
-    flex-direction:column; justify-content:center; align-items:center;
-    color:var(--accent); text-align:center;
-}
-.glitch-text {
-    font-family:var(--font-hud);
-    font-size:4rem; font-weight:900;
-    position:relative;
-    text-shadow:0 0 20px var(--accent-glow);
-}
-.panic-sub { letter-spacing:12px; font-size:0.7rem; color:#333; margin-top:20px; }
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-hexagon">
+                <span class="logo-icon">⬡</span>
+            </div>
+            <span class="logo-text">A404</span>
+        </div>
+        
+        <div class="sidebar-menu">
+            <div class="side-category">ARCHIVOS</div>
+            <div class="side-item" onclick="openWin('w-files')" title="Bóveda de Datos">
+                <span class="side-icon">📂</span><span class="side-label">BÓVEDA</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-gallery')" title="Archivos Multimedia">
+                <span class="side-icon">🎞</span><span class="side-label">GALERÍA</span>
+            </div>
+            
+            <div class="side-category">MULTIMEDIA</div>
+            <div class="side-item" onclick="openWin('w-audio')" title="Frecuencias de Audio">
+                <span class="side-icon">🎵</span><span class="side-label">FRECUENCIAS</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-stream')" title="Monitoreo de Video">
+                <span class="side-icon">📺</span><span class="side-label">STREAM</span>
+            </div>
+            
+            <div class="side-category">OPERACIONES</div>
+            <div class="side-item" onclick="openWin('w-notes')" title="Notas de Operador">
+                <span class="side-icon">📝</span><span class="side-label">BITÁCORA</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-tasks')" title="Tareas Pendientes">
+                <span class="side-icon">🎯</span><span class="side-label">OBJETIVOS</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-ia')" title="Asistente de IA">
+                <span class="side-icon ia-icon">🤖</span><span class="side-label">MINI IA</span>
+            </div>
+            
+            <div class="side-category">SISTEMA</div>
+            <div class="side-item" onclick="openWin('w-creador')" title="Panel de Administración">
+                <span class="side-icon">⚙</span><span class="side-label">NÚCLEO</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-sys')" title="Rendimiento">
+                <span class="side-icon">📊</span><span class="side-label">MONITOR</span>
+            </div>
+        </div>
 
-/* ── MODAL CLAVE ── */
-.key-modal-overlay {
-    display:none; position:fixed; inset:0;
-    background:rgba(0,0,0,0.88); z-index:9000;
-    justify-content:center; align-items:center;
-    backdrop-filter:blur(4px);
-}
-.key-modal-overlay.active { display:flex; }
-.key-modal {
-    background:var(--bg-soft);
-    border:1px solid var(--accent);
-    padding:40px 35px; width:340px;
-    box-shadow:0 0 60px rgba(255,0,60,0.25);
-    text-align:center;
-    animation:slideIn 0.3s ease;
-}
-.key-modal-icon { font-size:2.5rem; margin-bottom:15px; display:block; }
-.key-modal h3 { font-family:var(--font-hud); font-size:0.75rem; letter-spacing:4px; color:var(--accent); margin-bottom:8px; }
-.key-modal p { font-size:0.6rem; color:var(--text-dim); margin-bottom:20px; }
-.key-modal input { text-align:center; letter-spacing:10px; font-size:1.4rem; margin-bottom:15px; }
-#key-error { color:var(--accent) !important; display:none; margin-top:10px; font-size:0.6rem !important; }
+        <div class="sidebar-footer">
+            <div class="side-item" onclick="toggleSentinel()">
+                <span class="side-icon sentinel-icon">🛡</span><span class="side-label">CENTINELA</span>
+            </div>
+            <div class="side-item danger-item" onclick="panicAbort()">
+                <span class="side-icon">⏻</span><span class="side-label">ABORTAR</span>
+            </div>
+        </div>
+    </nav>
 
-/* ── LIGHTBOX ── */
-.lightbox-overlay {
-    display:none; position:fixed; inset:0;
-    background:rgba(0,0,0,0.95); z-index:8000;
-    justify-content:center; align-items:center;
-    backdrop-filter:blur(8px);
-}
-.lightbox-overlay.active { display:flex; }
-.lightbox-content {
-    position:relative; max-width:90vw; max-height:90vh;
-    animation:scaleIn 0.25s ease;
-}
-.lightbox-close {
-    position:absolute; top:-40px; right:0;
-    background:transparent; border:1px solid var(--accent);
-    color:var(--accent); font-size:1.2rem; width:36px; height:36px;
-    cursor:pointer; transition:var(--transition);
-}
-.lightbox-close:hover { background:var(--accent); color:#000; }
-#lightbox-media img, #lightbox-media video {
-    max-width:85vw; max-height:80vh;
-    border:1px solid var(--border);
-    display:block;
-}
-#lightbox-name {
-    text-align:center; font-size:0.65rem; color:var(--text-dim);
-    margin-top:10px; letter-spacing:2px;
-}
+    <main class="main-stage">
+        <header class="system-header">
+            <div class="title-group">
+                <h1 class="main-title" data-text="ARCHIVO 404">ARCHIVO 404</h1>
+                <p class="subtitle">USER: LENIN // ROL: ROOT // STATUS: <span class="status-online">ENCRYPTED ●</span></p>
+            </div>
+            <div class="header-right">
+                <div class="network-stats">
+                    <span class="ping-icon">📶</span> <span id="ping-ms">12ms</span>
+                </div>
+                <div class="status-badge" id="uptime">UPTIME: 00:00:00</div>
+                <div class="firebase-badge" id="fb-status">⬤ CONECTANDO...</div>
+            </div>
+        </header>
 
-/* ── SIDEBAR ── */
-.sidebar {
-    width:64px;
-    height:100vh;
-    background:var(--bg-soft);
-    border-right:1px solid var(--border);
-    display:flex; flex-direction:column; align-items:center;
-    padding:16px 0;
-    z-index:100;
-    transition:width var(--transition);
-    overflow:hidden;
-    flex-shrink:0;
-}
-.sidebar:hover { width:210px; }
+        <div class="desktop-widget-clock">
+            <div id="desktop-time">00:00</div>
+            <div id="desktop-date">Cargando fecha...</div>
+        </div>
 
-.sidebar-logo {
-    display:flex; align-items:center; gap:12px;
-    padding:10px 20px; margin-bottom:16px;
-    white-space:nowrap; overflow:hidden;
-    width:100%;
-}
-.logo-icon { font-size:1.4rem; min-width:24px; text-align:center; color:var(--accent); }
-.logo-text { font-family:var(--font-hud); font-size:0.75rem; color:var(--accent); font-weight:700; letter-spacing:3px; }
+        <section class="terminal-container">
+            <div class="terminal-topbar">
+                <div class="terminal-dots">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                </div>
+                <span class="terminal-title">CORE_TERMINAL v3.5 // CONSOLA MAESTRA</span>
+                <div class="terminal-tools">
+                    <button class="term-btn" onclick="clearTerminal()">[ CLEAR ]</button>
+                </div>
+            </div>
+            <div id="output-stream" class="custom-scrollbar">
+                <div class="sys-msg">Bienvenido al sistema ARCHIVO 404. Escriba 'help' para ver los comandos.</div>
+            </div>
+            <div class="input-line">
+                <span class="prompt">root@404:~$</span>
+                <input type="text" id="main-input" placeholder="ingrese comando y presione Enter..." autocomplete="off" spellcheck="false">
+            </div>
+        </section>
+    </main>
 
-.side-item {
-    width:100%; padding:14px 20px;
-    display:flex; align-items:center; gap:18px;
-    color:var(--text-dim);
-    transition:var(--transition);
-    white-space:nowrap; overflow:hidden;
-    font-size:0.72rem; letter-spacing:1px;
-    border-left:2px solid transparent;
-    cursor:pointer;
-}
-.side-item:hover {
-    color:var(--accent);
-    background:var(--accent-dim);
-    border-left-color:var(--accent);
-}
-.side-icon { font-size:1.1rem; min-width:24px; text-align:center; }
-.side-label { font-family:var(--font-hud); font-size:0.6rem; letter-spacing:2px; }
-.side-divider { width:60%; height:1px; background:var(--border); margin:10px auto; }
-.danger-item:hover { color:var(--accent); }
-.sentinel-icon { color:var(--green); }
+    <div id="w-files" class="win" style="top:8%;left:12%;width:720px;height:520px;z-index:100;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">📂</span><span class="win-title">SECTORES DE MEMORIA</span></div>
+            <div class="win-controls">
+                <button class="win-tool-btn" title="Vista Lista/Grid">𝌚</button>
+                <button class="enc-toggle-btn" id="vault-enc-btn" onclick="toggleVaultEncrypted()">🔒 MOSTRAR CIFRADOS</button>
+                <button class="win-btn min" onclick="minimizeWin('w-files')"></button>
+                <button class="win-btn max" onclick="maximizeWin('w-files')"></button>
+                <button class="win-btn close" onclick="closeWin('w-files')"></button>
+            </div>
+        </div>
+        <div class="win-body">
+            <div class="vault-toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="file-filter" placeholder="Buscar en sectores de memoria..." oninput="renderVault()" class="search-input">
+                </div>
+                <div class="vault-stats">
+                    <span id="vault-count">0 Archivos</span>
+                </div>
+            </div>
+            <div id="vault-grid" class="grid-view custom-scrollbar">
+                </div>
+        </div>
+    </div>
 
-/* ── MAIN STAGE ── */
-.main-stage {
-    flex:1; display:flex; flex-direction:column;
-    padding:30px 36px; position:relative;
-    overflow:hidden;
-}
+    <div id="w-editor" class="win" style="top:12%;left:18%;width:780px;height:560px;z-index:101;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">✏</span><span class="win-title" id="edit-filename">EDITOR DE DATOS</span></div>
+            <div class="win-controls">
+                <button class="win-btn min" onclick="minimizeWin('w-editor')"></button>
+                <button class="win-btn max" onclick="maximizeWin('w-editor')"></button>
+                <button class="win-btn close" onclick="closeWin('w-editor')"></button>
+            </div>
+        </div>
+        <div class="win-body editor-body">
+            <div class="editor-toolbar">
+                <button class="tool-btn">Guardar</button>
+                <button class="tool-btn">Formatear</button>
+                <span class="editor-status">Modificado</span>
+            </div>
+            <div class="editor-container">
+                <div class="line-numbers">1<br>2<br>3</div>
+                <textarea id="editor-field" class="editor-textarea custom-scrollbar" spellcheck="false"></textarea>
+            </div>
+            <div class="editor-footer">
+                <button class="primary-btn" onclick="commitFile()">⟳ SINCRONIZAR CAMBIOS AL NÚCLEO</button>
+            </div>
+        </div>
+    </div>
 
-.system-header {
-    display:flex; justify-content:space-between; align-items:flex-end;
-    margin-bottom:24px; padding-bottom:18px;
-    border-bottom:1px solid var(--border);
-}
-.main-title {
-    font-family:var(--font-hud);
-    font-size:2.2rem; font-weight:900;
-    color:var(--accent); letter-spacing:4px;
-    text-shadow:0 0 30px rgba(255,0,60,0.3);
-}
-.subtitle { font-size:0.6rem; color:#2a2a2a; margin-top:4px; letter-spacing:2px; }
-.status-online { color:var(--green); }
-.header-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
-.status-badge {
-    font-family:var(--font-hud); font-size:0.55rem;
-    background:rgba(255,0,60,0.08); color:var(--accent);
-    padding:5px 12px; border:1px solid var(--accent);
-    letter-spacing:2px;
-}
-.firebase-badge {
-    font-size:0.55rem; color:#2a2a2a; letter-spacing:1px;
-    transition:color 0.5s;
-}
-.firebase-badge.online { color:var(--green); }
-.firebase-badge.offline { color:var(--accent); }
+    <div id="w-gallery" class="win" style="top:5%;left:8%;width:950px;height:650px;z-index:102;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">🎞</span><span class="win-title">GALERÍA MULTIMEDIA SECRETA</span></div>
+            <div class="win-controls">
+                <button class="primary-btn btn-small" onclick="decryptAllGallery()">🔓 DESENCRIPTAR TODO</button>
+                <button class="enc-toggle-btn" id="gallery-enc-btn" onclick="toggleGalleryEncrypted()">🔒 FILTRO CIFRADOS</button>
+                <button class="win-btn max" onclick="maximizeWin('w-gallery')"></button>
+                <button class="win-btn close" onclick="closeWin('w-gallery')"></button>
+            </div>
+        </div>
+        <div class="win-body gallery-body custom-scrollbar">
+            <div class="gallery-tabs">
+                <button class="tab-btn active" onclick="switchGalleryTab('all')">TODO</button>
+                <button class="tab-btn" onclick="switchGalleryTab('img')">IMÁGENES</button>
+                <button class="tab-btn" onclick="switchGalleryTab('vid')">VIDEOS</button>
+            </div>
+            
+            <div class="gallery-section">
+                <div class="gallery-section-title">
+                    <span>📷 IMÁGENES RECOPILADAS</span>
+                    <span class="gallery-counter">Total: <span id="img-count">0</span></span>
+                </div>
+                <div id="gallery-photos" class="gallery-grid"></div>
+            </div>
+            
+            <div class="gallery-section">
+                <div class="gallery-section-title">
+                    <span>🎬 REGISTROS DE VIDEO</span>
+                    <span class="gallery-counter">Total: <span id="vid-count">0</span></span>
+                </div>
+                <div id="gallery-videos" class="gallery-grid"></div>
+            </div>
+        </div>
+    </div>
 
-/* ── TERMINAL ── */
-.terminal-container {
-    flex:1; display:flex; flex-direction:column;
-    background:rgba(3,3,3,0.9);
-    border:1px solid var(--border);
-    border-radius:6px;
-    box-shadow:0 8px 40px rgba(0,0,0,0.6), inset 0 0 60px rgba(255,0,60,0.01);
-    overflow:hidden;
-}
-.terminal-topbar {
-    background:#050505; padding:8px 14px;
-    border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:6px;
-}
-.terminal-dot { width:10px; height:10px; border-radius:50%; }
-.terminal-dot.red    { background:#ff5f57; }
-.terminal-dot.yellow { background:#febc2e; }
-.terminal-dot.green  { background:#28c840; }
-.terminal-title { font-size:0.6rem; color:#222; margin-left:10px; letter-spacing:2px; font-family:var(--font-hud); }
+    <div id="w-audio" class="win" style="top:40%;left:35%;width:500px;height:450px;z-index:103;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">🎵</span><span class="win-title">SISTEMA DE FRECUENCIAS</span></div>
+            <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-audio')"></button></div>
+        </div>
+        <div class="win-body audio-body">
+            <div class="audio-visualizer">
+                <div class="bar" style="height: 20%"></div>
+                <div class="bar" style="height: 50%"></div>
+                <div class="bar" style="height: 80%"></div>
+                <div class="bar" style="height: 30%"></div>
+                <div class="bar" style="height: 90%"></div>
+                <div class="bar" style="height: 60%"></div>
+            </div>
+            <div class="audio-player-wrap">
+                <div id="now-playing" class="now-playing marquee">
+                    <span>— ESPERANDO FRECUENCIA DE ENTRADA —</span>
+                </div>
+                <audio id="audio-player" controls class="custom-audio"></audio>
+            </div>
+            <div class="audio-controls-extra">
+                <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.8" title="Volumen">
+            </div>
+            <div id="audio-list" class="audio-list custom-scrollbar"></div>
+        </div>
+    </div>
 
-#output-stream {
-    flex:1; padding:20px 24px;
-    overflow-y:auto; display:flex;
-    flex-direction:column; gap:8px;
-    font-size:0.82rem;
-}
-.log-entry { display:flex; gap:12px; animation:fadeIn 0.25s ease; }
-.log-ts { color:#252525; min-width:76px; font-size:0.7rem; }
-.log-msg { line-height:1.5; color:#777; }
-.log-msg.cmd { color:var(--accent); font-weight:bold; }
-.log-msg.ok  { color:var(--green); }
-.log-msg.warn { color:var(--gold); }
+    <div id="w-stream" class="win" style="top:3%;left:5%;width:1150px;height:700px;z-index:104;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">📺</span><span class="win-title">CCTV / MONITOREO DE RED</span></div>
+            <div class="win-controls">
+                <button class="win-btn max" onclick="maximizeWin('w-stream')"></button>
+                <button class="win-btn close" onclick="closeWin('w-stream')"></button>
+            </div>
+        </div>
+        <div class="win-body stream-layout">
+            <div class="stream-toolbar">
+                <div class="stream-inputs">
+                    <input type="text" id="stream-url-input" placeholder="Pega URL (YouTube, Twitch, MP4)..." autocomplete="off" class="stream-input-main">
+                    <input type="text" id="stream-label-input" placeholder="Etiqueta de cámara" autocomplete="off" class="stream-input-sub">
+                    <button onclick="addStreamPanel()" class="primary-btn add-stream-btn">📡 CONECTAR FEED</button>
+                </div>
+                <div class="stream-actions">
+                    <span id="stream-count" class="stream-counter">0 / 10 FEEDS</span>
+                    <button onclick="clearAllPanels()" class="danger-outline-btn">✕ PURGAR PANELES</button>
+                </div>
+            </div>
 
-.input-line {
-    padding:14px 24px; background:#030303;
-    border-top:1px solid var(--border);
-    display:flex; align-items:center; gap:10px;
-}
-.prompt { color:var(--accent); font-size:0.8rem; white-space:nowrap; }
-#main-input {
-    background:transparent; border:none;
-    color:var(--text-main); font-family:var(--font-mono);
-    font-size:0.9rem; width:100%; outline:none;
-}
+            <div id="stream-grid" class="stream-grid custom-scrollbar">
+                </div>
 
-/* ── VENTANAS FLOTANTES ── */
-.win {
-    position:absolute;
-    background:var(--bg-deep);
-    border:1px solid var(--border);
-    box-shadow:0 24px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,0,60,0.04);
-    display:none; flex-direction:column;
-    min-width:380px; min-height:280px;
-    resize:both; overflow:hidden;
-    border-radius:6px;
-    animation:winOpen 0.2s ease;
-}
-.win.active { display:flex; }
+            <div id="stream-empty" class="empty-state">
+                <div class="empty-icon">📡</div>
+                <p>NO HAY SEÑAL DE VIDEO</p>
+                <span>Inserte una URL para establecer conexión satelital</span>
+            </div>
+        </div>
+    </div>
 
-.win-head {
-    background:var(--bg-soft);
-    padding:10px 14px;
-    border-bottom:1px solid var(--border);
-    display:flex; justify-content:space-between; align-items:center;
-    cursor:move; user-select:none; flex-shrink:0;
-}
-.win-head-left { display:flex; align-items:center; gap:8px; }
-.win-icon { font-size:0.9rem; }
-.win-title { font-family:var(--font-hud); font-size:0.58rem; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; }
-.win-controls { display:flex; align-items:center; gap:8px; }
-.win-btn { width:11px; height:11px; border-radius:50%; border:none; cursor:pointer; opacity:0.4; transition:opacity 0.2s; }
-.win-btn:hover { opacity:1; }
-.win-btn.close { background:var(--accent); }
+    <div id="w-notes" class="win" style="top:18%;left:60%;width:450px;height:400px;z-index:105;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">📝</span><span class="win-title">BITÁCORA CONFIDENCIAL</span></div>
+            <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-notes')"></button></div>
+        </div>
+        <div class="win-body flex-col">
+            <textarea id="txt-notes" class="editor-textarea custom-scrollbar" placeholder=">> Registre sus notas aquí. Sincronización automática desactivada..."></textarea>
+            <button class="primary-btn" onclick="saveStatic('notes')">ENCRIPTAR Y GUARDAR BITÁCORA</button>
+        </div>
+    </div>
 
-.win-body {
-    flex:1; padding:18px; overflow-y:auto;
-    background:rgba(0,0,0,0.2);
-}
+    <div id="w-tasks" class="win" style="top:25%;left:65%;width:450px;height:400px;z-index:106;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">🎯</span><span class="win-title">MATRIZ DE OBJETIVOS</span></div>
+            <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-tasks')"></button></div>
+        </div>
+        <div class="win-body flex-col">
+            <textarea id="txt-tasks" class="editor-textarea custom-scrollbar" placeholder=">> Defina los objetivos a corto y largo plazo..."></textarea>
+            <button class="primary-btn" onclick="saveStatic('tasks')">ACTUALIZAR DIRECTRICES</button>
+        </div>
+    </div>
 
-/* ── INPUTS GLOBALES ── */
-input[type="text"], input[type="password"], textarea {
-    width:100%;
-    background:#000; border:1px solid var(--border-mid);
-    padding:10px 12px; color:#fff;
-    font-family:var(--font-mono); font-size:0.8rem;
-    outline:none; transition:var(--transition);
-    border-radius:2px;
-}
-input:focus, textarea:focus {
-    border-color:var(--accent);
-    box-shadow:0 0 12px rgba(255,0,60,0.08);
-}
-textarea { resize:vertical; }
+    <div id="w-ia" class="win" style="top:15%;left:25%;width:600px;height:550px;z-index:107;display:none;">
+        <div class="win-head ia-head">
+            <div class="win-head-left">
+                <span class="win-icon glitch-icon">🤖</span>
+                <span class="win-title">IA_CORE // ENTIDAD LÓGICA</span>
+            </div>
+            <div class="win-controls">
+                <span class="ia-status">ONLINE</span>
+                <button class="win-btn min" onclick="minimizeWin('w-ia')"></button>
+                <button class="win-btn close" onclick="closeWin('w-ia')"></button>
+            </div>
+        </div>
+        <div class="win-body flex-col ia-body">
+            <div id="ia-chat-box" class="ia-chat-container custom-scrollbar">
+                <div class="ia-msg system">
+                    <div class="msg-avatar">⚙</div>
+                    <div class="msg-bubble">Módulo IA activado. Procesamiento de lenguaje natural en línea. ¿En qué puedo asistirte, operador?</div>
+                </div>
+                </div>
+            <div class="ia-typing-indicator hidden" id="ia-typing">
+                <span>.</span><span>.</span><span>.</span> procesando respuesta
+            </div>
+            <div class="ia-input-area">
+                <input type="text" id="ia-input" placeholder="Pregúntale a la IA del sistema..." autocomplete="off">
+                <button class="ia-send-btn" onclick="sendIaMessage()">ENVIAR</button>
+            </div>
+        </div>
+    </div>
 
-.search-input { margin-bottom:14px; font-size:0.72rem; }
+    <div id="w-sys" class="win" style="top:20%;left:50%;width:500px;height:350px;z-index:108;display:none;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">📊</span><span class="win-title">MONITOR DE RENDIMIENTO</span></div>
+            <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-sys')"></button></div>
+        </div>
+        <div class="win-body sys-body">
+            <div class="sys-metric">
+                <div class="metric-info"><span>USO DE CPU</span> <span id="cpu-val">14%</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill" id="cpu-bar" style="width: 14%;"></div></div>
+            </div>
+            <div class="sys-metric">
+                <div class="metric-info"><span>MEMORIA RAM</span> <span id="ram-val">3.2 GB / 16 GB</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill" id="ram-bar" style="width: 20%;"></div></div>
+            </div>
+            <div class="sys-metric">
+                <div class="metric-info"><span>TEMPERATURA NÚCLEO</span> <span id="temp-val">45°C</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill warning" id="temp-bar" style="width: 45%;"></div></div>
+            </div>
+            <div class="sys-details">
+                <p>> ARQUITECTURA: QUANTUM-X64</p>
+                <p>> FIREBASE DB: <span class="status-online">CONECTADO</span></p>
+                <p>> ENCRIPTACIÓN BASE: AES-256</p>
+            </div>
+        </div>
+    </div>
 
-.primary-btn {
-    background:transparent; border:1px solid var(--accent);
-    color:var(--accent); padding:10px 18px; width:100%;
-    font-family:var(--font-hud); font-size:0.6rem; font-weight:700;
-    letter-spacing:2px; text-transform:uppercase;
-    cursor:pointer; transition:var(--transition);
-}
-.primary-btn:hover { background:var(--accent); color:#000; box-shadow:0 0 20px var(--accent-glow); }
-.primary-btn:active { transform:scale(0.98); }
+    <div id="w-creador" class="win" style="top:2%;left:4%;width:1100px;height:700px;z-index:109;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">⚙</span><span class="win-title">PANEL DE CONTROL SUPERIOR — NÚCLEO</span></div>
+            <div class="win-controls">
+                <button class="win-btn max" onclick="maximizeWin('w-creador')"></button>
+                <button class="win-btn close" onclick="closeWin('w-creador')"></button>
+            </div>
+        </div>
+        <div class="win-body creador-body custom-scrollbar">
+            
+            <div class="creador-grid">
+                <div class="upload-sector card-hover" id="sector-txt">
+                    <div class="sector-header"><span class="sector-icon">📄</span> INYECTAR TEXTO</div>
+                    <input type="text" id="up-name-txt" class="neon-input" placeholder="Nombre de archivo (ej: data.json)">
+                    <div class="drop-zone" id="drop-txt" onclick="document.getElementById('upload-txt').click()">
+                        <div class="drop-content">
+                            <span class="drop-icon">📄</span>
+                            <span class="drop-hint">Click o arrastrar aquí</span>
+                            <span class="drop-sub" id="drop-txt-name">Formatos: .txt, .md, .json, .csv</span>
+                        </div>
+                    </div>
+                    <input type="file" id="upload-txt" style="display:none" accept=".txt,.md,.json,.csv,.log" onchange="handleUpload(this,'txt')">
+                    <div class="sector-footer">
+                        <label class="enc-label checkbox-wrapper">
+                            <input type="checkbox" id="enc-txt"> 
+                            <span class="checkmark"></span>
+                            🔒 Cifrado Fuerte (404)
+                        </label>
+                        <button class="primary-btn upload-btn" onclick="saveFile('txt')">CARGAR A BÓVEDA</button>
+                    </div>
+                    <div class="upload-progress" id="prog-txt"><div class="prog-bar" id="progbar-txt"></div></div>
+                </div>
 
-.enc-toggle-btn {
-    background:transparent; border:1px solid #333;
-    color:#444; padding:4px 10px;
-    font-family:var(--font-mono); font-size:0.58rem;
-    cursor:pointer; transition:var(--transition);
-}
-.enc-toggle-btn:hover, .enc-toggle-btn.active { border-color:var(--gold); color:var(--gold); }
+                <div class="upload-sector card-hover" id="sector-img">
+                    <div class="sector-header"><span class="sector-icon">🖼</span> INYECTAR IMAGEN</div>
+                    <input type="text" id="up-name-img" class="neon-input" placeholder="Nombre de imagen">
+                    <div class="drop-zone" id="drop-img" onclick="document.getElementById('upload-img').click()">
+                        <div class="drop-content">
+                            <span class="drop-icon">🖼</span>
+                            <span class="drop-hint">Click o arrastrar aquí</span>
+                            <span class="drop-sub" id="drop-img-name">Formatos: jpg, png, webp, gif</span>
+                        </div>
+                    </div>
+                    <input type="file" id="upload-img" style="display:none" accept="image/*" onchange="handleUpload(this,'img')">
+                    <div class="sector-footer">
+                        <label class="enc-label checkbox-wrapper">
+                            <input type="checkbox" id="enc-img"> 
+                            <span class="checkmark"></span>
+                            🔒 Cifrado Fuerte (404)
+                        </label>
+                        <button class="primary-btn upload-btn" onclick="saveFile('img')">CARGAR A GALERÍA</button>
+                    </div>
+                    <div class="upload-progress" id="prog-img"><div class="prog-bar" id="progbar-img"></div></div>
+                </div>
 
-/* ── GRID BÓVEDA ── */
-.grid-view {
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(100px,1fr));
-    gap:12px;
-}
-.card {
-    background:var(--bg-card); border:1px solid var(--border);
-    padding:14px 10px; text-align:center;
-    transition:var(--transition); cursor:pointer;
-    border-radius:4px; position:relative;
-}
-.card:hover { border-color:var(--accent); background:#0f0f0f; transform:translateY(-2px); box-shadow:0 8px 24px rgba(255,0,60,0.08); }
-.card-icon { font-size:1.6rem; margin-bottom:8px; display:block; }
-.card-label { font-size:0.58rem; color:#555; word-break:break-all; }
-.card.locked { border-color:#2a2a2a; opacity:0.6; }
-.badge-enc { font-size:0.45rem; color:var(--gold); border:1px solid var(--gold); padding:1px 4px; display:inline-block; margin-top:4px; }
+                <div class="upload-sector card-hover" id="sector-vid">
+                    <div class="sector-header"><span class="sector-icon">🎬</span> INYECTAR VIDEO</div>
+                    <input type="text" id="up-name-vid" class="neon-input" placeholder="Identificador de video">
+                    <div class="drop-zone" id="drop-vid" onclick="document.getElementById('upload-vid').click()">
+                        <div class="drop-content">
+                            <span class="drop-icon">🎬</span>
+                            <span class="drop-hint">Click o arrastrar aquí</span>
+                            <span class="drop-sub" id="drop-vid-name">Formatos: mp4, webm, mov</span>
+                        </div>
+                    </div>
+                    <input type="file" id="upload-vid" style="display:none" accept="video/*" onchange="handleUpload(this,'vid')">
+                    <div class="sector-footer">
+                        <label class="enc-label checkbox-wrapper">
+                            <input type="checkbox" id="enc-vid"> 
+                            <span class="checkmark"></span>
+                            🔒 Cifrado Fuerte (404)
+                        </label>
+                        <button class="primary-btn upload-btn" onclick="saveFile('vid')">CARGAR A GALERÍA</button>
+                    </div>
+                    <div class="upload-progress" id="prog-vid"><div class="prog-bar" id="progbar-vid"></div></div>
+                </div>
 
-/* ── GALERÍA ── */
-.gallery-body { display:flex; flex-direction:column; gap:20px; overflow-y:auto; }
-.gallery-section {}
-.gallery-section-title {
-    font-family:var(--font-hud); font-size:0.6rem; letter-spacing:3px;
-    color:var(--text-dim); margin-bottom:12px;
-    padding-bottom:6px; border-bottom:1px solid var(--border);
-}
-.gallery-grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(130px,1fr));
-    gap:10px;
-}
-.gallery-thumb {
-    position:relative; aspect-ratio:1;
-    background:#050505; border:1px solid var(--border);
-    border-radius:3px; overflow:hidden;
-    cursor:pointer; transition:var(--transition);
-}
-.gallery-thumb:hover { border-color:var(--accent); transform:scale(1.03); box-shadow:0 8px 30px rgba(255,0,60,0.15); }
-.gallery-thumb img, .gallery-thumb video {
-    width:100%; height:100%; object-fit:cover; display:block;
-    pointer-events:none;
-}
-.gallery-thumb .thumb-label {
-    position:absolute; bottom:0; left:0; right:0;
-    background:rgba(0,0,0,0.8); font-size:0.52rem;
-    color:#666; padding:4px 6px;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.gallery-thumb .thumb-del {
-    position:absolute; top:4px; right:4px;
-    background:rgba(0,0,0,0.7); color:var(--accent);
-    border:1px solid var(--accent); width:20px; height:20px;
-    font-size:0.75rem; display:flex; align-items:center; justify-content:center;
-    opacity:0; transition:var(--transition); cursor:pointer; border-radius:2px;
-    line-height:1;
-}
-.gallery-thumb:hover .thumb-del { opacity:1; }
-.gallery-thumb.enc-thumb { filter:blur(8px) grayscale(0.5); }
-.gallery-thumb.enc-thumb:hover { filter:none; }
-.gallery-empty { font-size:0.65rem; color:#1a1a1a; padding:20px 0; }
+                <div class="upload-sector card-hover" id="sector-aud">
+                    <div class="sector-header"><span class="sector-icon">🎵</span> INYECTAR AUDIO</div>
+                    <input type="text" id="up-name-aud" class="neon-input" placeholder="Nombre de pista / señal">
+                    <div class="drop-zone" id="drop-aud" onclick="document.getElementById('upload-aud').click()">
+                        <div class="drop-content">
+                            <span class="drop-icon">🎵</span>
+                            <span class="drop-hint">Click o arrastrar aquí</span>
+                            <span class="drop-sub" id="drop-aud-name">Formatos: mp3, wav, ogg</span>
+                        </div>
+                    </div>
+                    <input type="file" id="upload-aud" style="display:none" accept="audio/*" onchange="handleUpload(this,'aud')">
+                    <div class="sector-footer">
+                        <label class="enc-label checkbox-wrapper">
+                            <input type="checkbox" id="enc-aud"> 
+                            <span class="checkmark"></span>
+                            🔒 Cifrado Fuerte (404)
+                        </label>
+                        <button class="primary-btn upload-btn" onclick="saveFile('aud')">CARGAR A FRECUENCIAS</button>
+                    </div>
+                    <div class="upload-progress" id="prog-aud"><div class="prog-bar" id="progbar-aud"></div></div>
+                </div>
+            </div>
 
-/* ── AUDIO ── */
-.audio-body { display:flex; flex-direction:column; gap:10px; }
-.audio-player-wrap { flex-shrink:0; }
-.now-playing { font-size:0.62rem; color:#333; margin-bottom:8px; letter-spacing:1px; text-align:center; }
-#audio-player { width:100%; }
-.audio-list { flex:1; overflow-y:auto; border-top:1px solid var(--border); padding-top:8px; }
-.audio-row {
-    display:flex; align-items:center; gap:8px;
-    padding:8px 10px; border-bottom:1px solid #0a0a0a;
-    cursor:pointer; transition:var(--transition);
-}
-.audio-row:hover { background:rgba(255,0,60,0.04); }
-.audio-row.playing { background:rgba(255,0,60,0.07); border-left:2px solid var(--accent); }
-.audio-row-label { flex:1; font-size:0.72rem; color:#777; }
-.audio-row-del {
-    font-size:0.6rem; color:var(--accent); opacity:0.3;
-    transition:var(--transition); padding:2px 6px;
-    border:1px solid transparent;
-}
-.audio-row:hover .audio-row-del { opacity:1; border-color:var(--accent); }
+            <div class="cmd-sector">
+                <div class="sector-header"><span class="sector-icon">⌨</span> ENRUTADOR DE COMANDOS TERMINAL</div>
+                <div class="cmd-row">
+                    <div class="cmd-inputs">
+                        <input type="text" id="cmd-name" class="neon-input" placeholder="Comando (ej: protocolo_alfa)">
+                        <textarea id="cmd-res" class="neon-textarea custom-scrollbar" placeholder="Respuesta que devolverá la terminal al ejecutar..."></textarea>
+                    </div>
+                    <div class="cmd-action">
+                        <button class="primary-btn btn-large" onclick="saveCommand()">VINCULAR COMANDO AL NÚCLEO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-/* ── EDITOR ── */
-.editor-textarea {
-    flex:1; min-height:280px;
-    background:#000; border:1px solid var(--border-mid);
-    color:#ccc; font-family:var(--font-mono); font-size:0.82rem;
-    line-height:1.7; padding:14px; resize:none;
-}
 
-/* ── CREADOR ── */
-.creador-body { display:flex; flex-direction:column; gap:20px; overflow-y:auto; }
-.creador-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+    <template id="tpl-gallery-img">
+        <div class="gallery-item img-item">
+            <div class="item-overlay">
+                <span class="item-title"></span>
+                <button class="view-btn">VER</button>
+            </div>
+            <img src="" alt="imagen" loading="lazy">
+            <div class="encrypted-cover hidden">
+                <span class="lock-icon">🔒</span>
+                <span>CIFRADO</span>
+            </div>
+        </div>
+    </template>
 
-.upload-sector {
-    background:#050505; border:1px solid var(--border);
-    padding:16px; border-radius:4px;
-    display:flex; flex-direction:column; gap:10px;
-    transition:var(--transition);
-}
-.upload-sector:hover { border-color:#252525; }
+    <template id="tpl-ia-msg-user">
+        <div class="ia-msg user">
+            <div class="msg-bubble"></div>
+            <div class="msg-avatar">US</div>
+        </div>
+    </template>
 
-.sector-header {
-    font-family:var(--font-hud); font-size:0.58rem;
-    letter-spacing:2px; color:var(--text-dim);
-    margin-bottom:4px;
-}
-.sector-icon { margin-right:4px; }
+    <template id="tpl-ia-msg-bot">
+        <div class="ia-msg system">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-bubble"></div>
+        </div>
+    </template>
 
-.drop-zone {
-    border:1px dashed #1a1a1a; padding:18px 10px;
-    text-align:center; cursor:pointer;
-    transition:var(--transition); border-radius:3px;
-    display:flex; flex-direction:column; align-items:center; gap:4px;
-}
-.drop-zone:hover, .drop-zone.drag-over {
-    border-color:var(--accent);
-    background:rgba(255,0,60,0.03);
-}
-.drop-icon { font-size:1.6rem; }
-.drop-hint { font-size:0.6rem; color:#333; }
-.drop-sub { font-size:0.5rem; color:#222; }
-
-.enc-label {
-    display:flex; align-items:center; gap:6px;
-    font-size:0.58rem; color:#333; cursor:pointer;
-}
-.enc-label input { width:auto; margin:0; cursor:pointer; }
-.enc-label:hover { color:var(--gold); }
-
-.upload-progress { height:2px; background:#0a0a0a; border-radius:1px; overflow:hidden; display:none; }
-.upload-progress.active { display:block; }
-.prog-bar { height:100%; width:0; background:var(--accent); transition:width 0.1s linear; }
-
-.cmd-sector {
-    background:#050505; border:1px solid var(--border);
-    padding:16px; border-radius:4px;
-}
-.cmd-row {
-    display:grid; grid-template-columns:1fr 1fr auto;
-    gap:12px; margin-top:10px; align-items:start;
-}
-.cmd-row textarea { height:70px; }
-.cmd-row .primary-btn { width:auto; white-space:nowrap; align-self:end; }
-
-.upload-btn { margin-top:4px; }
+    <script type="module" src="js/firebase.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        // Este script es solo un placeholder para que no se rompan las clases visuales nuevas.
+        // Toda la lógica fuerte la tienes en tu app.js.
+        function minimizeWin(id) {
+            console.log("Minimizando:", id);
+            // Lógica para añadir clase .minimized
+        }
+        function maximizeWin(id) {
+            console.log("Maximizando:", id);
+            // Lógica para pantalla completa de la ventana
+        }
+        function decryptAllGallery() {
+            // Esta función la crearás en app.js para quitar la clase 'encrypted' de todo
+            console.log("Iniciando desencriptación masiva...");
+            document.querySelectorAll('.gallery-item .encrypted-cover').forEach(el => el.classList.add('hidden'));
+        }
+        function sendIaMessage() {
+            const input = document.getElementById('ia-input');
+            if(input.value.trim() !== '') {
+                // Aquí va la lógica de tu IA
+                console.log("Mensaje a IA:", input.value);
+                input.value = '';
+            }
+        }
+    </script>
+</body>
+</html>

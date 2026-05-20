@@ -3,312 +3,579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARCHIVO 404 | CORE_SYSTEM</title>
+    <meta name="theme-color" content="#ff003c">
+    <meta name="description" content="CORE_SYSTEM - Acceso Clasificado">
+    <title>ARCHIVO 404 | CORE_SYSTEM v3.5</title>
+    
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Fira+Code:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body oncontextmenu="return false;">
 
-<!-- CAPA DE BOOT -->
-<div id="boot-screen">
-    <div class="boot-content">
-        <div class="boot-logo">ARCHIVO_404</div>
-        <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
-        <div class="boot-log" id="boot-log"></div>
-    </div>
-</div>
-
-<!-- CAPA DE PÁNICO -->
-<div id="panic-layer">
-    <div class="glitch-text" data-text="CRITICAL_ERROR">CRITICAL_ERROR</div>
-    <p class="panic-sub">WIPING_ALL_SECTORS...</p>
-</div>
-
-<!-- MODAL CLAVE 404 -->
-<div id="key-modal-overlay" class="key-modal-overlay" onclick="closeKeyModal()">
-    <div class="key-modal" onclick="event.stopPropagation()">
-        <div class="key-modal-icon">🔐</div>
-        <h3>ACCESO ENCRIPTADO</h3>
-        <p>INGRESA LA CLAVE DE SEGURIDAD</p>
-        <input type="password" id="key-input" placeholder="····" maxlength="10" autocomplete="off">
-        <button class="primary-btn" onclick="submitKey()">VERIFICAR IDENTIDAD</button>
-        <p id="key-error">⚠ CLAVE INCORRECTA — ACCESO DENEGADO</p>
-    </div>
-</div>
-
-<!-- MODAL VISOR DE FOTO (LIGHTBOX) -->
-<div id="lightbox" class="lightbox-overlay" onclick="closeLightbox()">
-    <div class="lightbox-content" onclick="event.stopPropagation()">
-        <button class="lightbox-close" onclick="closeLightbox()">×</button>
-        <div id="lightbox-media"></div>
-        <div id="lightbox-name"></div>
-    </div>
-</div>
-
-<!-- SIDEBAR -->
-<nav class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-        <span class="logo-icon">⬡</span>
-        <span class="logo-text">A404</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-files')">
-        <span class="side-icon">📂</span><span class="side-label">BÓVEDA</span>
-    </div>
-    <div class="side-item" onclick="openGallery()">
-        <span class="side-icon">🎞</span><span class="side-label">GALERÍA</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-audio')">
-        <span class="side-icon">🎵</span><span class="side-label">FRECUENCIAS</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-stream')">
-        <span class="side-icon">📺</span><span class="side-label">STREAM</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-notes')">
-        <span class="side-icon">📝</span><span class="side-label">BITÁCORA</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-tasks')">
-        <span class="side-icon">🎯</span><span class="side-label">OBJETIVOS</span>
-    </div>
-    <div class="side-divider"></div>
-    <div class="side-item" onclick="toggleSentinel()">
-        <span class="side-icon sentinel-icon">🛡</span><span class="side-label">CENTINELA</span>
-    </div>
-    <div class="side-item danger-item" onclick="panicAbort()">
-        <span class="side-icon">⏻</span><span class="side-label">ABORTAR</span>
-    </div>
-</nav>
-
-<!-- ÁREA PRINCIPAL -->
-<main class="main-stage">
-    <header class="system-header">
-        <div class="title-group">
-            <h1 class="main-title" data-text="ARCHIVO 404">ARCHIVO 404</h1>
-            <p class="subtitle">USER: LENIN // STATUS: <span class="status-online">ENCRYPTED ●</span></p>
-        </div>
-        <div class="header-right">
-            <div class="status-badge" id="uptime">UPTIME: 00:00:00</div>
-            <div class="firebase-badge" id="fb-status">⬤ CONECTANDO...</div>
-        </div>
-    </header>
-
-    <section class="terminal-container">
-        <div class="terminal-topbar">
-            <span class="terminal-dot red"></span>
-            <span class="terminal-dot yellow"></span>
-            <span class="terminal-dot green"></span>
-            <span class="terminal-title">CORE_TERMINAL v3.0</span>
-        </div>
-        <div id="output-stream"></div>
-        <div class="input-line">
-            <span class="prompt">root@404:~$</span>
-            <input type="text" id="main-input" placeholder="ingrese comando..." autocomplete="off" spellcheck="false">
-        </div>
-    </section>
-</main>
-
-<!-- ═══════════════════ VENTANAS FLOTANTES ═══════════════════ -->
-
-<!-- BÓVEDA -->
-<div id="w-files" class="win" style="top:8%;left:12%;width:680px;height:500px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📂</span><span class="win-title">SECTORES DE MEMORIA</span></div>
-        <div class="win-controls">
-            <button class="enc-toggle-btn" id="vault-enc-btn" onclick="toggleVaultEncrypted()">🔒 CIFRADOS</button>
-            <button class="win-btn close" onclick="closeWin('w-files')"></button>
+    <div id="boot-screen">
+        <div class="boot-content">
+            <div class="boot-logo glitch" data-text="ARCHIVO_404">ARCHIVO_404</div>
+            <div class="boot-subtitle">INICIALIZANDO NÚCLEO...</div>
+            <div class="boot-bar-wrap">
+                <div class="boot-bar" id="boot-bar"></div>
+            </div>
+            <div class="boot-details">
+                <span>MEM: OK</span> | <span>CPU: ALINEANDO</span> | <span>RED: BUSCANDO</span>
+            </div>
+            <div class="boot-log" id="boot-log">
+                > Cargando módulos de seguridad...<br>
+                > Desencriptando sectores primarios...
+            </div>
         </div>
     </div>
-    <div class="win-body">
-        <input type="text" id="file-filter" placeholder="FILTRAR SECTORES..." oninput="renderVault()" class="search-input">
-        <div id="vault-grid" class="grid-view"></div>
-    </div>
-</div>
 
-<!-- EDITOR -->
-<div id="w-editor" class="win" style="top:12%;left:18%;width:740px;height:540px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">✏</span><span class="win-title" id="edit-filename">EDITOR DE DATOS</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-editor')"></button></div>
-    </div>
-    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="editor-field" class="editor-textarea" spellcheck="false"></textarea>
-        <button class="primary-btn" onclick="commitFile()">⟳ SINCRONIZAR CAMBIOS</button>
-    </div>
-</div>
-
-<!-- GALERÍA -->
-<div id="w-gallery" class="win" style="top:5%;left:8%;width:900px;height:620px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎞</span><span class="win-title">GALERÍA VISUAL</span></div>
-        <div class="win-controls">
-            <button class="enc-toggle-btn" id="gallery-enc-btn" onclick="toggleGalleryEncrypted()">🔒 CIFRADOS</button>
-            <button class="win-btn close" onclick="closeWin('w-gallery')"></button>
+    <div id="panic-layer">
+        <div class="panic-container">
+            <div class="panic-icon">⚠</div>
+            <div class="glitch-text" data-text="CRITICAL_ERROR">CRITICAL_ERROR</div>
+            <p class="panic-sub">WIPING_ALL_SECTORS...</p>
+            <div class="panic-progress">
+                <div class="panic-progress-bar"></div>
+            </div>
+            <p class="panic-terminal">Purga de datos al 45%... No apague el sistema.</p>
         </div>
     </div>
-    <div class="win-body gallery-body">
-        <div class="gallery-section">
-            <div class="gallery-section-title">📷 IMÁGENES</div>
-            <div id="gallery-photos" class="gallery-grid"></div>
-        </div>
-        <div class="gallery-section">
-            <div class="gallery-section-title">🎬 VIDEOS</div>
-            <div id="gallery-videos" class="gallery-grid"></div>
-        </div>
-    </div>
-</div>
 
-<!-- FRECUENCIAS -->
-<div id="w-audio" class="win" style="top:45%;left:35%;width:460px;height:360px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎵</span><span class="win-title">FRECUENCIAS DE AUDIO</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-audio')"></button></div>
-    </div>
-    <div class="win-body audio-body">
-        <div class="audio-player-wrap">
-            <div id="now-playing" class="now-playing">— SIN PISTA ACTIVA —</div>
-            <audio id="audio-player" controls></audio>
-        </div>
-        <div id="audio-list" class="audio-list"></div>
-    </div>
-</div>
-
-<!-- ═══ PANEL STREAM DE VIDEO ═══ -->
-<div id="w-stream" class="win" style="top:3%;left:5%;width:1100px;height:680px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📺</span><span class="win-title">STREAM — MONITOR DE VIDEO</span></div>
-        <div class="win-controls">
-            <button class="win-btn close" onclick="closeWin('w-stream')"></button>
-        </div>
-    </div>
-    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;padding:12px;">
-
-        <!-- Barra de agregar URL -->
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <input type="text" id="stream-url-input" placeholder="Pega URL de YouTube, Twitch, cualquier video..." autocomplete="off"
-                style="flex:1;min-width:200px;background:var(--bg2,#111);color:var(--fg,#1a1a1a);border:1px solid var(--accent,#ff003c);padding:7px 12px;font-family:inherit;font-size:0.7rem;border-radius:4px;outline:none;">
-            <input type="text" id="stream-label-input" placeholder="Nombre (opcional)" autocomplete="off"
-                style="width:160px;background:var(--bg2,#111);color:var(--fg,#1a1a1a);border:1px solid #333;padding:7px 12px;font-family:inherit;font-size:0.7rem;border-radius:4px;outline:none;">
-            <button onclick="addStreamPanel()" class="primary-btn" style="white-space:nowrap;padding:7px 16px;">+ AGREGAR</button>
-            <button onclick="clearAllPanels()" style="background:transparent;color:#666;border:1px solid #333;padding:7px 12px;font-family:inherit;font-size:0.65rem;border-radius:4px;cursor:pointer;white-space:nowrap;">✕ LIMPIAR TODO</button>
-            <span id="stream-count" style="color:#555;font-size:0.6rem;white-space:nowrap;">0 / 10 STREAMS</span>
-        </div>
-
-        <!-- Mosaico de reproductores -->
-        <div id="stream-grid" style="
-            flex:1;
-            display:grid;
-            grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-            gap:8px;
-            overflow-y:auto;
-            min-height:400px;
-        "></div>
-
-        <div id="stream-empty" style="color:#333;font-size:0.65rem;text-align:center;padding:40px;letter-spacing:0.15em;">
-            SIN STREAMS — AGREGA UNA URL ARRIBA
-        </div>
-    </div>
-</div>
-
-<!-- BITÁCORA -->
-<div id="w-notes" class="win" style="top:18%;left:38%;width:500px;height:420px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📝</span><span class="win-title">BITÁCORA</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-notes')"></button></div>
-    </div>
-    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="txt-notes" class="editor-textarea" placeholder="Notas del operador..."></textarea>
-        <button class="primary-btn" onclick="saveStatic('notes')">GUARDAR BITÁCORA</button>
-    </div>
-</div>
-
-<!-- OBJETIVOS -->
-<div id="w-tasks" class="win" style="top:22%;left:42%;width:500px;height:420px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎯</span><span class="win-title">OBJETIVOS</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-tasks')"></button></div>
-    </div>
-    <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="txt-tasks" class="editor-textarea" placeholder="Objetivos del sistema..."></textarea>
-        <button class="primary-btn" onclick="saveStatic('tasks')">GUARDAR OBJETIVOS</button>
-    </div>
-</div>
-
-<!-- CREADOR -->
-<div id="w-creador" class="win" style="top:3%;left:4%;width:1000px;height:640px;">
-    <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">⚙</span><span class="win-title">PANEL DE ADMINISTRACIÓN — NÚCLEO</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-creador')"></button></div>
-    </div>
-    <div class="win-body creador-body">
-        <div class="creador-grid">
-            <div class="upload-sector" id="sector-txt">
-                <div class="sector-header"><span class="sector-icon">📄</span> ARCHIVO DE TEXTO</div>
-                <input type="text" id="up-name-txt" placeholder="Nombre del archivo">
-                <div class="drop-zone" id="drop-txt" onclick="document.getElementById('upload-txt').click()">
-                    <span class="drop-icon">📄</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-txt-name">Acepta .txt .md .json .csv</span>
+    <div id="key-modal-overlay" class="key-modal-overlay" onclick="closeKeyModal()">
+        <div class="key-modal" onclick="event.stopPropagation()">
+            <div class="key-modal-header">
+                <span class="key-modal-icon">🔐</span>
+                <span class="key-modal-title">SISTEMA CIFRADO</span>
+            </div>
+            <div class="key-modal-body">
+                <h3>VERIFICACIÓN REQUERIDA</h3>
+                <p>SECTOR RESTRINGIDO. INGRESA CREDENCIALES NIVEL 4.</p>
+                <div class="input-wrapper">
+                    <input type="password" id="key-input" placeholder="INGRESE CLAVE..." maxlength="10" autocomplete="off">
+                    <span class="input-cursor"></span>
                 </div>
-                <input type="file" id="upload-txt" style="display:none" accept=".txt,.md,.json,.csv,.log" onchange="handleUpload(this,'txt')">
-                <label class="enc-label"><input type="checkbox" id="enc-txt"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('txt')">REGISTRAR → BÓVEDA</button>
-                <div class="upload-progress" id="prog-txt"><div class="prog-bar" id="progbar-txt"></div></div>
-            </div>
-            <div class="upload-sector" id="sector-img">
-                <div class="sector-header"><span class="sector-icon">🖼</span> IMAGEN → GALERÍA</div>
-                <input type="text" id="up-name-img" placeholder="Nombre de la imagen">
-                <div class="drop-zone" id="drop-img" onclick="document.getElementById('upload-img').click()">
-                    <span class="drop-icon">🖼</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-img-name">Acepta jpg png gif webp</span>
-                </div>
-                <input type="file" id="upload-img" style="display:none" accept="image/*" onchange="handleUpload(this,'img')">
-                <label class="enc-label"><input type="checkbox" id="enc-img"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('img')">REGISTRAR → GALERÍA</button>
-                <div class="upload-progress" id="prog-img"><div class="prog-bar" id="progbar-img"></div></div>
-            </div>
-            <div class="upload-sector" id="sector-vid">
-                <div class="sector-header"><span class="sector-icon">🎬</span> VIDEO → GALERÍA</div>
-                <input type="text" id="up-name-vid" placeholder="Nombre del video">
-                <div class="drop-zone" id="drop-vid" onclick="document.getElementById('upload-vid').click()">
-                    <span class="drop-icon">🎬</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-vid-name">Acepta mp4 webm mov</span>
-                </div>
-                <input type="file" id="upload-vid" style="display:none" accept="video/*" onchange="handleUpload(this,'vid')">
-                <label class="enc-label"><input type="checkbox" id="enc-vid"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('vid')">REGISTRAR → GALERÍA</button>
-                <div class="upload-progress" id="prog-vid"><div class="prog-bar" id="progbar-vid"></div></div>
-            </div>
-            <div class="upload-sector" id="sector-aud">
-                <div class="sector-header"><span class="sector-icon">🎵</span> MÚSICA → FRECUENCIAS</div>
-                <input type="text" id="up-name-aud" placeholder="Nombre de la pista">
-                <div class="drop-zone" id="drop-aud" onclick="document.getElementById('upload-aud').click()">
-                    <span class="drop-icon">🎵</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-aud-name">Acepta mp3 wav ogg flac</span>
-                </div>
-                <input type="file" id="upload-aud" style="display:none" accept="audio/*" onchange="handleUpload(this,'aud')">
-                <label class="enc-label"><input type="checkbox" id="enc-aud"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('aud')">REGISTRAR → FRECUENCIAS</button>
-                <div class="upload-progress" id="prog-aud"><div class="prog-bar" id="progbar-aud"></div></div>
-            </div>
-        </div>
-        <div class="cmd-sector">
-            <div class="sector-header"><span class="sector-icon">⌨</span> VINCULAR COMANDO TERMINAL</div>
-            <div class="cmd-row">
-                <input type="text" id="cmd-name" placeholder="Nombre del comando (ej: saludo)">
-                <textarea id="cmd-res" placeholder="Respuesta del sistema..."></textarea>
-                <button class="primary-btn" onclick="saveCommand()">VINCULAR PROTOCOLO</button>
+                <button class="primary-btn btn-glitch" onclick="submitKey()">VERIFICAR IDENTIDAD</button>
+                <p id="key-error" class="hidden">⚠ CLAVE INCORRECTA — ACCESO DENEGADO</p>
             </div>
         </div>
     </div>
-</div>
 
-<!-- ═══ SCRIPTS ═══ -->
-<script type="module" src="js/firebase.js"></script>
-<script src="js/app.js"></script>
+    <div id="lightbox" class="lightbox-overlay" onclick="closeLightbox()">
+        <div class="lightbox-toolbar" onclick="event.stopPropagation()">
+            <span id="lightbox-name">archivo.png</span>
+            <div class="lightbox-controls">
+                <button class="icon-btn" title="Descargar">⬇</button>
+                <button class="icon-btn" title="Pantalla Completa">⛶</button>
+                <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+            </div>
+        </div>
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <div id="lightbox-media">
+                </div>
+        </div>
+    </div>
+
+    <div id="custom-context-menu" class="context-menu hidden">
+        <div class="ctx-item" onclick="openWin('w-sys')">⚙ Inspeccionar Sistema</div>
+        <div class="ctx-item" onclick="openWin('w-ia')">🤖 Invocar IA</div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item danger" onclick="panicAbort()">☠ Forzar Pánico</div>
+    </div>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-hexagon">
+                <span class="logo-icon">⬡</span>
+            </div>
+            <span class="logo-text">A404</span>
+        </div>
+        
+        <div class="sidebar-menu">
+            <div class="side-category">ARCHIVOS</div>
+            <div class="side-item" onclick="openWin('w-files')" title="Bóveda de Datos">
+                <span class="side-icon">📂</span><span class="side-label">BÓVEDA</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-gallery')" title="Archivos Multimedia">
+                <span class="side-icon">🎞</span><span class="side-label">GALERÍA</span>
+            </div>
+            
+            <div class="side-category">MULTIMEDIA</div>
+            <div class="side-item" onclick="openWin('w-audio')" title="Frecuencias de Audio">
+                <span class="side-icon">🎵</span><span class="side-label">FRECUENCIAS</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-stream')" title="Monitoreo de Video">
+                <span class="side-icon">📺</span><span class="side-label">STREAM</span>
+            </div>
+            
+            <div class="side-category">OPERACIONES</div>
+            <div class="side-item" onclick="openWin('w-notes')" title="Notas de Operador">
+                <span class="side-icon">📝</span><span class="side-label">BITÁCORA</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-tasks')" title="Tareas Pendientes">
+                <span class="side-icon">🎯</span><span class="side-label">OBJETIVOS</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-ia')" title="Asistente de IA">
+                <span class="side-icon ia-icon">🤖</span><span class="side-label">MINI IA</span>
+            </div>
+            
+            <div class="side-category">SISTEMA</div>
+            <div class="side-item" onclick="openWin('w-creador')" title="Panel de Administración">
+                <span class="side-icon">⚙</span><span class="side-label">NÚCLEO</span>
+            </div>
+            <div class="side-item" onclick="openWin('w-sys')" title="Rendimiento">
+                <span class="side-icon">📊</span><span class="side-label">MONITOR</span>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="side-item" onclick="toggleSentinel()">
+                <span class="side-icon sentinel-icon">🛡</span><span class="side-label">CENTINELA</span>
+            </div>
+            <div class="side-item danger-item" onclick="panicAbort()">
+                <span class="side-icon">⏻</span><span class="side-label">ABORTAR</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-stage">
+        <header class="system-header">
+            <div class="title-group">
+                <h1 class="main-title" data-text="ARCHIVO 404">ARCHIVO 404</h1>
+                <p class="subtitle">USER: LENIN // ROL: ROOT // STATUS: <span class="status-online">ENCRYPTED ●</span></p>
+            </div>
+            <div class="header-right">
+                <div class="network-stats">
+                    <span class="ping-icon">📶</span> <span id="ping-ms">12ms</span>
+                </div>
+                <div class="status-badge" id="uptime">UPTIME: 00:00:00</div>
+                <div class="firebase-badge" id="fb-status">⬤ CONECTANDO...</div>
+            </div>
+        </header>
+
+        <div class="desktop-widget-clock">
+            <div id="desktop-time">00:00</div>
+            <div id="desktop-date">Cargando fecha...</div>
+        </div>
+
+        <section class="terminal-container">
+            <div class="terminal-topbar">
+                <div class="terminal-dots">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                </div>
+                <span class="terminal-title">CORE_TERMINAL v3.5 // CONSOLA MAESTRA</span>
+                <div class="terminal-tools">
+                    <button class="term-btn" onclick="clearTerminal()">[ CLEAR ]</button>
+                </div>
+            </div>
+            <div id="output-stream" class="custom-scrollbar">
+                <div class="sys-msg">Bienvenido al sistema ARCHIVO 404. Escriba 'help' para ver los comandos.</div>
+            </div>
+            <div class="input-line">
+                <span class="prompt">root@404:~$</span>
+                <input type="text" id="main-input" placeholder="ingrese comando y presione Enter..." autocomplete="off" spellcheck="false">
+            </div>
+        </section>
+    </main>
+
+    <div id="w-files" class="win" style="top:8%;left:12%;width:720px;height:520px;z-index:100;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">📂</span><span class="win-title">SECTORES DE MEMORIA</span></div>
+            <div class="win-controls">
+                <button class="win-tool-btn" title="Vista Lista/Grid">𝌚</button>
+                <button class="enc-toggle-btn" id="vault-enc-btn" onclick="toggleVaultEncrypted()">🔒 MOSTRAR CIFRADOS</button>
+                <button class="win-btn min" onclick="minimizeWin('w-files')"></button>
+                <button class="win-btn max" onclick="maximizeWin('w-files')"></button>
+                <button class="win-btn close" onclick="closeWin('w-files')"></button>
+            </div>
+        </div>
+        <div class="win-body">
+            <div class="vault-toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="file-filter" placeholder="Buscar en sectores de memoria..." oninput="renderVault()" class="search-input">
+                </div>
+                <div class="vault-stats">
+                    <span id="vault-count">0 Archivos</span>
+                </div>
+            </div>
+            <div id="vault-grid" class="grid-view custom-scrollbar">
+                </div>
+        </div>
+    </div>
+
+    <div id="w-editor" class="win" style="top:12%;left:18%;width:780px;height:560px;z-index:101;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">✏</span><span class="win-title" id="edit-filename">EDITOR DE DATOS</span></div>
+            <div class="win-controls">
+                <button class="win-btn min" onclick="minimizeWin('w-editor')"></button>
+                <button class="win-btn max" onclick="maximizeWin('w-editor')"></button>
+                <button class="win-btn close" onclick="closeWin('w-editor')"></button>
+            </div>
+        </div>
+        <div class="win-body editor-body">
+            <div class="editor-toolbar">
+                <button class="tool-btn">Guardar</button>
+                <button class="tool-btn">Formatear</button>
+                <span class="editor-status">Modificado</span>
+            </div>
+            <div class="editor-container">
+                <div class="line-numbers">1<br>2<br>3</div>
+                <textarea id="editor-field" class="editor-textarea custom-scrollbar" spellcheck="false"></textarea>
+            </div>
+            <div class="editor-footer">
+                <button class="primary-btn" onclick="commitFile()">⟳ SINCRONIZAR CAMBIOS AL NÚCLEO</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="w-gallery" class="win" style="top:5%;left:8%;width:950px;height:650px;z-index:102;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">🎞</span><span class="win-title">GALERÍA MULTIMEDIA SECRETA</span></div>
+            <div class="win-controls">
+                <button class="primary-btn btn-small" onclick="decryptAllGallery()">🔓 DESENCRIPTAR TODO</button>
+                <button class="enc-toggle-btn" id="gallery-enc-btn" onclick="toggleGalleryEncrypted()">🔒 FILTRO CIFRADOS</button>
+                <button class="win-btn max" onclick="maximizeWin('w-gallery')"></button>
+                <button class="win-btn close" onclick="closeWin('w-gallery')"></button>
+            </div>
+        </div>
+        <div class="win-body gallery-body custom-scrollbar">
+            <div class="gallery-tabs">
+                <button class="tab-btn active" onclick="switchGalleryTab('all')">TODO</button>
+                <button class="tab-btn" onclick="switchGalleryTab('img')">IMÁGENES</button>
+                <button class="tab-btn" onclick="switchGalleryTab('vid')">VIDEOS</button>
+            </div>
+            
+            <div class="gallery-section">
+                <div class="gallery-section-title">
+                    <span>📷 IMÁGENES RECOPILADAS</span>
+                    <span class="gallery-counter">Total: <span id="img-count">0</span></span>
+                </div>
+                <div id="gallery-photos" class="gallery-grid"></div>
+            </div>
+            
+            <div class="gallery-section">
+                <div class="gallery-section-title">
+                    <span>🎬 REGISTROS DE VIDEO</span>
+                    <span class="gallery-counter">Total: <span id="vid-count">0</span></span>
+                </div>
+                <div id="gallery-videos" class="gallery-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="w-audio" class="win" style="top:40%;left:35%;width:500px;height:450px;z-index:103;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">🎵</span><span class="win-title">SISTEMA DE FRECUENCIAS</span></div>
+            <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-audio')"></button></div>
+        </div>
+        <div class="win-body audio-body">
+            <div class="audio-visualizer">
+                <div class="bar" style="height: 20%"></div>
+                <div class="bar" style="height: 50%"></div>
+                <div class="bar" style="height: 80%"></div>
+                <div class="bar" style="height: 30%"></div>
+                <div class="bar" style="height: 90%"></div>
+                <div class="bar" style="height: 60%"></div>
+            </div>
+            <div class="audio-player-wrap">
+                <div id="now-playing" class="now-playing marquee">
+                    <span>— ESPERANDO FRECUENCIA DE ENTRADA —</span>
+                </div>
+                <audio id="audio-player" controls class="custom-audio"></audio>
+            </div>
+            <div class="audio-controls-extra">
+                <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.8" title="Volumen">
+            </div>
+            <div id="audio-list" class="audio-list custom-scrollbar"></div>
+        </div>
+    </div>
+
+    <div id="w-stream" class="win" style="top:3%;left:5%;width:1150px;height:700px;z-index:104;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">📺</span><span class="win-title">CCTV / MONITOREO DE RED</span></div>
+            <div class="win-controls">
+                <button class="win-btn max" onclick="maximizeWin('w-stream')"></button>
+                <button class="win-btn close" onclick="closeWin('w-stream')"></button>
+            </div>
+        </div>
+        <div class="win-body stream-layout">
+            <div class="stream-toolbar">
+                <div class="stream-inputs">
+                    <input type="text" id="stream-url-input" placeholder="Pega URL (YouTube, Twitch, MP4)..." autocomplete="off" class="stream-input-main">
+                    <input type="text" id="stream-label-input" placeholder="Etiqueta de cámara" autocomplete="off" class="stream-input-sub">
+                    <button onclick="addStreamPanel()" class="primary-btn add-stream-btn">📡 CONECTAR FEED</button>
+                </div>
+                <div class="stream-actions">
+                    <span id="stream-count" class="stream-counter">0 / 10 FEEDS</span>
+                    <button onclick="clearAllPanels()" class="danger-outline-btn">✕ PURGAR PANELES</button>
+                </div>
+            </div>
+
+            <div id="stream-grid" class="stream-grid custom-scrollbar">
+                </div>
+
+            <div id="stream-empty" class="empty-state">
+                <div class="empty-icon">📡</div>
+                <p>NO HAY SEÑAL DE VIDEO</p>
+                <span>Inserte una URL para establecer conexión satelital</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="w-notes" class="win" style="top:18%;left:60%;width:450px;height:400px;z-index:105;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">📝</span><span class="win-title">BITÁCORA CONFIDENCIAL</span></div>
+            <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-notes')"></button></div>
+        </div>
+        <div class="win-body flex-col">
+            <textarea id="txt-notes" class="editor-textarea custom-scrollbar" placeholder=">> Registre sus notas aquí. Sincronización automática desactivada..."></textarea>
+            <button class="primary-btn" onclick="saveStatic('notes')">ENCRIPTAR Y GUARDAR BITÁCORA</button>
+        </div>
+    </div>
+
+    <div id="w-tasks" class="win" style="top:25%;left:65%;width:450px;height:400px;z-index:106;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">🎯</span><span class="win-title">MATRIZ DE OBJETIVOS</span></div>
+            <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-tasks')"></button></div>
+        </div>
+        <div class="win-body flex-col">
+            <textarea id="txt-tasks" class="editor-textarea custom-scrollbar" placeholder=">> Defina los objetivos a corto y largo plazo..."></textarea>
+            <button class="primary-btn" onclick="saveStatic('tasks')">ACTUALIZAR DIRECTRICES</button>
+        </div>
+    </div>
+
+    <div id="w-ia" class="win" style="top:15%;left:25%;width:600px;height:550px;z-index:107;display:none;">
+        <div class="win-head ia-head">
+            <div class="win-head-left">
+                <span class="win-icon glitch-icon">🤖</span>
+                <span class="win-title">IA_CORE // ENTIDAD LÓGICA</span>
+            </div>
+            <div class="win-controls">
+                <span class="ia-status">ONLINE</span>
+                <button class="win-btn min" onclick="minimizeWin('w-ia')"></button>
+                <button class="win-btn close" onclick="closeWin('w-ia')"></button>
+            </div>
+        </div>
+        <div class="win-body flex-col ia-body">
+            <div id="ia-chat-box" class="ia-chat-container custom-scrollbar">
+                <div class="ia-msg system">
+                    <div class="msg-avatar">⚙</div>
+                    <div class="msg-bubble">Módulo IA activado. Procesamiento de lenguaje natural en línea. ¿En qué puedo asistirte, operador?</div>
+                </div>
+                </div>
+            <div class="ia-typing-indicator hidden" id="ia-typing">
+                <span>.</span><span>.</span><span>.</span> procesando respuesta
+            </div>
+            <div class="ia-input-area">
+                <input type="text" id="ia-input" placeholder="Pregúntale a la IA del sistema..." autocomplete="off">
+                <button class="ia-send-btn" onclick="sendIaMessage()">ENVIAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="w-sys" class="win" style="top:20%;left:50%;width:500px;height:350px;z-index:108;display:none;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">📊</span><span class="win-title">MONITOR DE RENDIMIENTO</span></div>
+            <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-sys')"></button></div>
+        </div>
+        <div class="win-body sys-body">
+            <div class="sys-metric">
+                <div class="metric-info"><span>USO DE CPU</span> <span id="cpu-val">14%</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill" id="cpu-bar" style="width: 14%;"></div></div>
+            </div>
+            <div class="sys-metric">
+                <div class="metric-info"><span>MEMORIA RAM</span> <span id="ram-val">3.2 GB / 16 GB</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill" id="ram-bar" style="width: 20%;"></div></div>
+            </div>
+            <div class="sys-metric">
+                <div class="metric-info"><span>TEMPERATURA NÚCLEO</span> <span id="temp-val">45°C</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill warning" id="temp-bar" style="width: 45%;"></div></div>
+            </div>
+            <div class="sys-details">
+                <p>> ARQUITECTURA: QUANTUM-X64</p>
+                <p>> FIREBASE DB: <span class="status-online">CONECTADO</span></p>
+                <p>> ENCRIPTACIÓN BASE: AES-256</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="w-creador" class="win" style="top:2%;left:4%;width:1100px;height:700px;z-index:109;">
+        <div class="win-head">
+            <div class="win-head-left"><span class="win-icon">⚙</span><span class="win-title">PANEL DE CONTROL SUPERIOR — NÚCLEO</span></div>
+            <div class="win-controls">
+                <button class="win-btn max" onclick="maximizeWin('w-creador')"></button>
+                <button class="win-btn close" onclick="closeWin('w-creador')"></button>
+            </div>
+        </div>
+        <div class="win-body creador-body custom-scrollbar">
+            
+            <div class="creador-grid">
+                <div class="upload-sector card-hover" id="sector-txt">
+                    <div class="sector-header"><span class="sector-icon">📄</span> INYECTAR TEXTO</div>
+                    <input type="text" id="up-name-txt" class="neon-input" placeholder="Nombre de archivo (ej: data.json)">
+                    <div class="drop-zone" id="drop-txt" onclick="document.getElementById('upload-txt').click()">
+                        <div class="drop-content">
+                            <span class="drop-icon">📄</span>
+                            <span class="drop-hint">Click o arrastrar aquí</span>
+                            <span class="drop-sub" id="drop-txt-name">Formatos: .txt, .md, .json, .csv</span>
+                        </div>
+                    </div>
+                    <input type="file" id="upload-txt" style="display:none" accept=".txt,.md,.json,.csv,.log" onchange="handleUpload(this,'txt')">
+                    <div class="sector-footer">
+                        <label class="enc-label checkbox-wrapper">
+                            <input type="checkbox" id="enc-txt"> 
+                            <span class="checkmark"></span>
+                            🔒 Cifrado Fuerte (404)
+                        </label>
+                        <button class="primary-btn upload-btn" onclick="saveFile('txt')">CARGAR A BÓVEDA</button>
+                    </div>
+                    <div class="upload-progress" id="prog-txt"><div class="prog-bar" id="progbar-txt"></div></div>
+                </div>
+
+                <div class="upload-sector card-hover" id="sector-img">
+                    <div class="sector-header"><span class="sector-icon">🖼</span> INYECTAR IMAGEN</div>
+                    <input type="text" id="up-name-img" class="neon-input" placeholder="Nombre de imagen">
+                    <div class="drop-zone" id="drop-img" onclick="document.getElementById('upload-img').click()">
+                        <div class="drop-content">
+                            <span class="drop-icon">🖼</span>
+                            <span class="drop-hint">Click o arrastrar aquí</span>
+                            <span class="drop-sub" id="drop-img-name">Formatos: jpg, png, webp, gif</span>
+                        </div>
+                    </div>
+                    <input type="file" id="upload-img" style="display:none" accept="image/*" onchange="handleUpload(this,'img')">
+                    <div class="sector-footer">
+                        <label class="enc-label checkbox-wrapper">
+                            <input type="checkbox" id="enc-img"> 
+                            <span class="checkmark"></span>
+                            🔒 Cifrado Fuerte (404)
+                        </label>
+                        <button class="primary-btn upload-btn" onclick="saveFile('img')">CARGAR A GALERÍA</button>
+                    </div>
+                    <div class="upload-progress" id="prog-img"><div class="prog-bar" id="progbar-img"></div></div>
+                </div>
+
+                <div class="upload-sector card-hover" id="sector-vid">
+                    <div class="sector-header"><span class="sector-icon">🎬</span> INYECTAR VIDEO</div>
+                    <input type="text" id="up-name-vid" class="neon-input" placeholder="Identificador de video">
+                    <div class="drop-zone" id="drop-vid" onclick="document.getElementById('upload-vid').click()">
+                        <div class="drop-content">
+                            <span class="drop-icon">🎬</span>
+                            <span class="drop-hint">Click o arrastrar aquí</span>
+                            <span class="drop-sub" id="drop-vid-name">Formatos: mp4, webm, mov</span>
+                        </div>
+                    </div>
+                    <input type="file" id="upload-vid" style="display:none" accept="video/*" onchange="handleUpload(this,'vid')">
+                    <div class="sector-footer">
+                        <label class="enc-label checkbox-wrapper">
+                            <input type="checkbox" id="enc-vid"> 
+                            <span class="checkmark"></span>
+                            🔒 Cifrado Fuerte (404)
+                        </label>
+                        <button class="primary-btn upload-btn" onclick="saveFile('vid')">CARGAR A GALERÍA</button>
+                    </div>
+                    <div class="upload-progress" id="prog-vid"><div class="prog-bar" id="progbar-vid"></div></div>
+                </div>
+
+                <div class="upload-sector card-hover" id="sector-aud">
+                    <div class="sector-header"><span class="sector-icon">🎵</span> INYECTAR AUDIO</div>
+                    <input type="text" id="up-name-aud" class="neon-input" placeholder="Nombre de pista / señal">
+                    <div class="drop-zone" id="drop-aud" onclick="document.getElementById('upload-aud').click()">
+                        <div class="drop-content">
+                            <span class="drop-icon">🎵</span>
+                            <span class="drop-hint">Click o arrastrar aquí</span>
+                            <span class="drop-sub" id="drop-aud-name">Formatos: mp3, wav, ogg</span>
+                        </div>
+                    </div>
+                    <input type="file" id="upload-aud" style="display:none" accept="audio/*" onchange="handleUpload(this,'aud')">
+                    <div class="sector-footer">
+                        <label class="enc-label checkbox-wrapper">
+                            <input type="checkbox" id="enc-aud"> 
+                            <span class="checkmark"></span>
+                            🔒 Cifrado Fuerte (404)
+                        </label>
+                        <button class="primary-btn upload-btn" onclick="saveFile('aud')">CARGAR A FRECUENCIAS</button>
+                    </div>
+                    <div class="upload-progress" id="prog-aud"><div class="prog-bar" id="progbar-aud"></div></div>
+                </div>
+            </div>
+
+            <div class="cmd-sector">
+                <div class="sector-header"><span class="sector-icon">⌨</span> ENRUTADOR DE COMANDOS TERMINAL</div>
+                <div class="cmd-row">
+                    <div class="cmd-inputs">
+                        <input type="text" id="cmd-name" class="neon-input" placeholder="Comando (ej: protocolo_alfa)">
+                        <textarea id="cmd-res" class="neon-textarea custom-scrollbar" placeholder="Respuesta que devolverá la terminal al ejecutar..."></textarea>
+                    </div>
+                    <div class="cmd-action">
+                        <button class="primary-btn btn-large" onclick="saveCommand()">VINCULAR COMANDO AL NÚCLEO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <template id="tpl-gallery-img">
+        <div class="gallery-item img-item">
+            <div class="item-overlay">
+                <span class="item-title"></span>
+                <button class="view-btn">VER</button>
+            </div>
+            <img src="" alt="imagen" loading="lazy">
+            <div class="encrypted-cover hidden">
+                <span class="lock-icon">🔒</span>
+                <span>CIFRADO</span>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-ia-msg-user">
+        <div class="ia-msg user">
+            <div class="msg-bubble"></div>
+            <div class="msg-avatar">US</div>
+        </div>
+    </template>
+
+    <template id="tpl-ia-msg-bot">
+        <div class="ia-msg system">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-bubble"></div>
+        </div>
+    </template>
+
+    <script type="module" src="js/firebase.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        // Este script es solo un placeholder para que no se rompan las clases visuales nuevas.
+        // Toda la lógica fuerte la tienes en tu app.js.
+        function minimizeWin(id) {
+            console.log("Minimizando:", id);
+            // Lógica para añadir clase .minimized
+        }
+        function maximizeWin(id) {
+            console.log("Maximizando:", id);
+            // Lógica para pantalla completa de la ventana
+        }
+        function decryptAllGallery() {
+            // Esta función la crearás en app.js para quitar la clase 'encrypted' de todo
+            console.log("Iniciando desencriptación masiva...");
+            document.querySelectorAll('.gallery-item .encrypted-cover').forEach(el => el.classList.add('hidden'));
+        }
+        function sendIaMessage() {
+            const input = document.getElementById('ia-input');
+            if(input.value.trim() !== '') {
+                // Aquí va la lógica de tu IA
+                console.log("Mensaje a IA:", input.value);
+                input.value = '';
+            }
+        }
+    </script>
 </body>
 </html>
-

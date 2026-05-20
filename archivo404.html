@@ -3,311 +3,1696 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARCHIVO 404 | CORE_SYSTEM</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/animations.css">
+    <title>ARCHIVO 404 | CORE_SYSTEM v4.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ═══ VARIABLES ═══ */
+        :root {
+            --bg:      #050507;
+            --bg2:     #08080f;
+            --bg3:     #0d0d18;
+            --bg4:     #121222;
+            --accent:  #ff003c;
+            --accent2: #00ffaa;
+            --accent3: #ffaa00;
+            --accent4: #00aaff;
+            --fg:      #dde0ff;
+            --fg2:     #7788aa;
+            --fg3:     #334455;
+            --border:  rgba(255,0,60,0.22);
+            --border2: rgba(0,255,170,0.2);
+            --glow-r:  0 0 15px rgba(255,0,60,0.5),0 0 30px rgba(255,0,60,0.15);
+            --glow-g:  0 0 15px rgba(0,255,170,0.5),0 0 30px rgba(0,255,170,0.15);
+            --glow-b:  0 0 15px rgba(0,170,255,0.5),0 0 30px rgba(0,170,255,0.15);
+            --shadow:  0 20px 60px rgba(0,0,0,0.85),0 0 0 1px rgba(255,0,60,0.2);
+            --mono:    'Share Tech Mono',monospace;
+            --display: 'Orbitron',sans-serif;
+            --r:       4px;
+        }
+
+        /* ═══ RESET ═══ */
+        *,*::before,*::after { box-sizing:border-box;margin:0;padding:0; }
+        html { scroll-behavior:smooth; }
+        body {
+            background:var(--bg);
+            color:var(--fg);
+            font-family:var(--mono);
+            min-height:100vh;
+            overflow:hidden;
+            cursor:none;
+            user-select:none;
+        }
+
+        /* ═══ CURSOR ═══ */
+        #cur-dot {
+            position:fixed;width:8px;height:8px;
+            background:var(--accent);border-radius:50%;
+            pointer-events:none;z-index:99999;
+            transform:translate(-50%,-50%);
+            box-shadow:var(--glow-r);
+            transition:width .1s,height .1s;
+        }
+        #cur-ring {
+            position:fixed;width:28px;height:28px;
+            border:1px solid rgba(255,0,60,.55);border-radius:50%;
+            pointer-events:none;z-index:99998;
+            transform:translate(-50%,-50%);
+            transition:transform .12s ease;
+        }
+
+        /* ═══ OVERLAYS ═══ */
+        #scanlines {
+            position:fixed;inset:0;
+            background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);
+            pointer-events:none;z-index:9990;
+            animation:scanScroll 10s linear infinite;
+        }
+        @keyframes scanScroll { from{background-position:0 0} to{background-position:0 120px} }
+        #vignette {
+            position:fixed;inset:0;
+            background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.72) 100%);
+            pointer-events:none;z-index:9989;
+        }
+        #pcv {
+            position:fixed;top:0;left:0;width:100%;height:100%;
+            pointer-events:none;z-index:1;opacity:.35;
+        }
+
+        /* ═══ TICKER ═══ */
+        #ticker {
+            position:fixed;top:0;left:60px;right:0;height:22px;
+            background:rgba(255,0,60,.06);
+            border-bottom:1px solid var(--border);
+            display:flex;align-items:center;
+            overflow:hidden;z-index:600;
+        }
+        #ticker-lbl {
+            font-size:.48rem;letter-spacing:.2em;color:var(--accent);
+            padding:0 10px;border-right:1px solid var(--border);white-space:nowrap;
+            flex-shrink:0;
+        }
+        #ticker-wrap { overflow:hidden;flex:1; }
+        #ticker-txt {
+            font-size:.48rem;letter-spacing:.1em;color:var(--fg2);
+            white-space:nowrap;
+            animation:tickMove 35s linear infinite;
+        }
+        @keyframes tickMove { from{transform:translateX(60vw)} to{transform:translateX(-100%)} }
+
+        /* ═══ BOOT ═══ */
+        #boot {
+            position:fixed;inset:0;background:var(--bg);
+            z-index:9999;display:flex;align-items:center;justify-content:center;
+        }
+        .boot-content { width:560px;max-width:90%; }
+        .boot-logo {
+            font-family:var(--display);font-size:2.8rem;font-weight:900;
+            color:var(--accent);text-shadow:var(--glow-r);
+            letter-spacing:.3em;margin-bottom:36px;
+            animation:bPulse .6s ease-in-out infinite alternate;
+        }
+        @keyframes bPulse {
+            from{opacity:.85}
+            to{opacity:1;text-shadow:0 0 50px var(--accent),0 0 100px rgba(255,0,60,.25)}
+        }
+        .boot-bar-wrap {
+            width:100%;height:3px;background:var(--bg3);
+            border-radius:2px;margin-bottom:18px;overflow:hidden;
+        }
+        #boot-bar {
+            height:100%;width:0%;
+            background:linear-gradient(90deg,var(--accent),var(--accent3));
+            border-radius:2px;transition:width .12s ease;
+            box-shadow:var(--glow-r);
+        }
+        #boot-log {
+            font-size:.58rem;color:var(--fg2);
+            line-height:1.9;letter-spacing:.07em;min-height:90px;
+        }
+        #boot-log .ok  { color:var(--accent2) }
+        #boot-log .wrn { color:var(--accent3) }
+        #boot-log .err { color:var(--accent) }
+
+        /* ═══ PANIC ═══ */
+        #panic {
+            display:none;position:fixed;inset:0;background:#000;
+            z-index:9999;align-items:center;justify-content:center;flex-direction:column;
+        }
+        .glitch {
+            font-family:var(--display);font-size:3.5rem;font-weight:900;
+            color:var(--accent);position:relative;
+            animation:gMain .28s infinite;
+        }
+        .glitch::before,.glitch::after {
+            content:attr(data-t);position:absolute;top:0;left:0;width:100%;
+        }
+        .glitch::before {
+            color:var(--accent4);animation:gA .28s infinite;
+            clip-path:polygon(0 0,100% 0,100% 33%,0 33%);
+        }
+        .glitch::after {
+            color:var(--accent2);animation:gB .28s infinite;
+            clip-path:polygon(0 67%,100% 67%,100% 100%,0 100%);
+        }
+        @keyframes gMain { 0%,100%{transform:translate(0)} 50%{transform:translate(-2px,1px)} }
+        @keyframes gA    { 0%,100%{transform:translate(0)} 50%{transform:translate(3px,-1px)} }
+        @keyframes gB    { 0%,100%{transform:translate(0)} 50%{transform:translate(-3px,2px)} }
+        .panic-sub { color:var(--accent);font-size:.75rem;letter-spacing:.3em;margin-top:20px; }
+
+        /* ═══ TOAST ═══ */
+        #toasts {
+            position:fixed;bottom:20px;right:20px;
+            z-index:8500;display:flex;flex-direction:column;gap:8px;
+            pointer-events:none;
+        }
+        .toast {
+            background:var(--bg3);border:1px solid var(--border);
+            border-left:3px solid var(--accent2);
+            padding:9px 14px;font-size:.58rem;letter-spacing:.08em;
+            color:var(--fg);border-radius:var(--r);
+            animation:tIn .25s ease,tOut .25s ease 2.75s forwards;
+            max-width:290px;pointer-events:auto;
+            box-shadow:0 8px 24px rgba(0,0,0,.5);
+        }
+        .toast.err  { border-left-color:var(--accent); }
+        .toast.warn { border-left-color:var(--accent3); }
+        @keyframes tIn  { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes tOut { from{opacity:1} to{opacity:0;transform:translateX(110%)} }
+
+        /* ═══ COMMAND PALETTE ═══ */
+        #palette {
+            display:none;position:fixed;top:18%;left:50%;
+            transform:translateX(-50%);
+            width:480px;max-width:90vw;
+            background:var(--bg3);border:1px solid var(--accent);
+            border-radius:6px;z-index:8000;
+            box-shadow:var(--shadow);overflow:hidden;
+        }
+        #palette.open { display:block;animation:palIn .15s ease; }
+        @keyframes palIn {
+            from{transform:translateX(-50%) scale(.94);opacity:0}
+            to{transform:translateX(-50%) scale(1);opacity:1}
+        }
+        #pal-search {
+            width:100%;background:transparent;border:none;
+            border-bottom:1px solid var(--border);color:var(--fg);
+            font-family:var(--mono);font-size:.72rem;
+            padding:13px 15px;outline:none;letter-spacing:.08em;
+        }
+        #pal-results { max-height:280px;overflow-y:auto;padding:5px; }
+        .pal-item {
+            display:flex;align-items:center;gap:10px;
+            padding:8px 11px;border-radius:3px;cursor:pointer;
+            font-size:.6rem;letter-spacing:.09em;color:var(--fg2);
+            transition:background .1s,color .1s;
+        }
+        .pal-item:hover,.pal-item.sel {
+            background:rgba(255,0,60,.1);color:var(--fg);
+        }
+        .pal-icon { color:var(--accent);width:16px;text-align:center; }
+        .pal-key {
+            margin-left:auto;font-size:.48rem;color:var(--fg3);
+            background:var(--bg2);padding:2px 6px;border-radius:2px;
+        }
+
+        /* ═══ KEY MODAL ═══ */
+        #key-modal-overlay {
+            display:none;position:fixed;inset:0;
+            background:rgba(0,0,0,.88);z-index:7000;
+            align-items:center;justify-content:center;
+            backdrop-filter:blur(5px);
+        }
+        #key-modal-overlay.active { display:flex; }
+        .key-modal {
+            background:var(--bg3);border:1px solid var(--accent);
+            padding:38px 44px;text-align:center;border-radius:6px;
+            box-shadow:var(--shadow);animation:mIn .2s ease;
+        }
+        @keyframes mIn { from{transform:scale(.9);opacity:0} to{transform:scale(1);opacity:1} }
+        .key-modal-icon { font-size:2.2rem;margin-bottom:14px; }
+        .key-modal h3 {
+            font-family:var(--display);font-size:.75rem;
+            letter-spacing:.28em;color:var(--accent);margin-bottom:8px;
+        }
+        .key-modal p { font-size:.58rem;color:var(--fg2);margin-bottom:18px;letter-spacing:.1em; }
+        .key-modal input {
+            width:170px;background:var(--bg2);
+            border:1px solid var(--border);color:var(--fg);
+            font-family:var(--mono);font-size:1.1rem;letter-spacing:.5em;
+            text-align:center;padding:9px;border-radius:var(--r);
+            outline:none;display:block;margin:0 auto 14px;
+        }
+        .key-modal input:focus { border-color:var(--accent);box-shadow:var(--glow-r); }
+        #key-error {
+            display:none;font-size:.52rem;color:var(--accent);
+            margin-top:8px;letter-spacing:.12em;
+        }
+
+        /* ═══ LIGHTBOX ═══ */
+        #lightbox {
+            display:none;position:fixed;inset:0;
+            background:rgba(0,0,0,.96);z-index:7500;
+            align-items:center;justify-content:center;
+            backdrop-filter:blur(8px);
+        }
+        #lightbox.active { display:flex; }
+        .lb-content { position:relative;max-width:90vw;max-height:90vh;text-align:center; }
+        .lb-close {
+            position:absolute;top:-38px;right:0;
+            background:transparent;border:1px solid var(--border);
+            color:var(--fg);font-size:1.1rem;
+            width:30px;height:30px;border-radius:50%;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+        }
+        #lb-media img,#lb-media video {
+            max-width:85vw;max-height:80vh;
+            border-radius:var(--r);box-shadow:0 0 60px rgba(0,0,0,.8);
+        }
+        #lb-name { font-size:.58rem;color:var(--fg2);margin-top:10px;letter-spacing:.12em; }
+
+        /* ═══ SIDEBAR ═══ */
+        .sidebar {
+            position:fixed;left:0;top:0;bottom:0;width:60px;
+            background:rgba(4,4,7,.97);border-right:1px solid var(--border);
+            z-index:700;display:flex;flex-direction:column;
+            align-items:center;padding:22px 0 14px;gap:3px;
+            backdrop-filter:blur(12px);
+        }
+        .sb-logo {
+            font-family:var(--display);font-size:.48rem;
+            color:var(--accent);letter-spacing:.18em;
+            margin-bottom:18px;display:flex;flex-direction:column;
+            align-items:center;gap:3px;
+        }
+        .sb-logo-i { font-size:1.15rem;filter:drop-shadow(0 0 8px var(--accent)); }
+        .si {
+            width:48px;height:48px;
+            display:flex;flex-direction:column;
+            align-items:center;justify-content:center;gap:2px;
+            cursor:pointer;border-radius:6px;
+            transition:background .15s,transform .1s;
+            position:relative;
+        }
+        .si:hover { background:rgba(255,0,60,.12);transform:scale(1.06); }
+        .si:active { transform:scale(.95); }
+        .si-icon { font-size:.95rem; }
+        .si-lbl { font-size:.33rem;letter-spacing:.07em;color:var(--fg3); }
+        .si:hover .si-lbl { color:var(--accent); }
+        .si-div { width:28px;height:1px;background:var(--border);margin:5px 0; }
+        .si-danger:hover { background:rgba(255,0,60,.22)!important; }
+        .si::after {
+            content:attr(data-tip);
+            position:absolute;left:58px;
+            background:var(--bg3);border:1px solid var(--border);
+            color:var(--fg);font-size:.52rem;
+            padding:4px 8px;border-radius:3px;
+            white-space:nowrap;letter-spacing:.09em;
+            opacity:0;pointer-events:none;
+            transition:opacity .18s;z-index:1000;
+        }
+        .si:hover::after { opacity:1; }
+
+        /* ═══ MAIN STAGE ═══ */
+        .stage {
+            position:fixed;left:60px;top:22px;right:0;bottom:0;
+            overflow:hidden;z-index:100;
+        }
+
+        /* ═══ HEADER ═══ */
+        .s-header {
+            display:flex;justify-content:space-between;align-items:center;
+            padding:12px 22px 10px;border-bottom:1px solid var(--border);
+            background:rgba(4,4,7,.88);backdrop-filter:blur(10px);
+            position:relative;z-index:200;
+        }
+        .main-title {
+            font-family:var(--display);font-size:1.25rem;font-weight:900;
+            letter-spacing:.3em;color:var(--accent);text-shadow:var(--glow-r);
+            position:relative;
+        }
+        .main-title::before {
+            content:attr(data-text);position:absolute;top:0;left:0;
+            color:var(--accent4);
+            clip-path:polygon(0 0,100% 0,100% 35%,0 35%);
+            transform:translateX(-2px);opacity:.35;
+        }
+        .subtitle { font-size:.52rem;color:var(--fg2);letter-spacing:.14em;margin-top:3px; }
+        .status-online { color:var(--accent2); }
+        .h-right { display:flex;gap:10px;align-items:center; }
+        .h-badge {
+            font-size:.52rem;color:var(--fg2);padding:3px 9px;
+            border:1px solid var(--border);border-radius:3px;
+            background:var(--bg2);letter-spacing:.1em;
+        }
+        #clock { font-family:var(--display);font-size:.6rem;color:var(--fg2);letter-spacing:.15em; }
+        #fb-status { font-size:.52rem;padding:3px 9px;border-radius:3px;letter-spacing:.09em; }
+
+        /* ═══ TERMINAL ═══ */
+        .term-wrap {
+            margin:14px 18px;border:1px solid var(--border);
+            border-radius:6px;background:rgba(7,7,13,.96);
+            overflow:hidden;
+            box-shadow:var(--shadow),inset 0 0 40px rgba(0,0,0,.4);
+            height:280px;display:flex;flex-direction:column;
+        }
+        .term-bar {
+            display:flex;align-items:center;gap:5px;
+            padding:7px 11px;background:rgba(12,12,20,.95);
+            border-bottom:1px solid var(--border);flex-shrink:0;
+        }
+        .tdot { width:10px;height:10px;border-radius:50%; }
+        .tdot.r { background:#ff5f57; }
+        .tdot.y { background:#ffbd2e; }
+        .tdot.g { background:#28c840; }
+        .tbar-title { font-size:.52rem;color:var(--fg3);letter-spacing:.14em;margin-left:7px; }
+        #output-stream {
+            flex:1;overflow-y:auto;padding:10px 14px;
+            font-size:.63rem;line-height:1.75;letter-spacing:.04em;
+        }
+        #output-stream::-webkit-scrollbar { width:3px; }
+        #output-stream::-webkit-scrollbar-thumb { background:var(--border); }
+        .out-line { color:var(--fg2);animation:fadeSlide .1s ease; }
+        .out-line.cmd { color:var(--accent2); }
+        .out-line.err { color:var(--accent); }
+        .out-line.ok  { color:var(--accent2); }
+        .out-line.inf { color:var(--accent3); }
+        .out-line.sys { color:var(--accent4); }
+        @keyframes fadeSlide { from{opacity:0;transform:translateY(2px)} to{opacity:1;transform:translateY(0)} }
+        .input-row {
+            display:flex;align-items:center;gap:9px;
+            padding:7px 14px;border-top:1px solid var(--border);
+            background:rgba(9,9,16,.92);flex-shrink:0;
+        }
+        .prompt { color:var(--accent);font-size:.63rem;white-space:nowrap; }
+        #main-input {
+            flex:1;background:transparent;border:none;
+            color:var(--fg);font-family:var(--mono);font-size:.63rem;
+            outline:none;caret-color:var(--accent);letter-spacing:.04em;
+        }
+
+        /* ═══ WINDOWS ═══ */
+        .win {
+            position:fixed;background:rgba(7,7,13,.97);
+            border:1px solid var(--border);border-radius:6px;
+            box-shadow:var(--shadow);display:none;
+            flex-direction:column;overflow:hidden;
+            backdrop-filter:blur(14px);
+            min-width:280px;min-height:180px;z-index:300;
+        }
+        .win.vis { display:flex;animation:winPop .2s cubic-bezier(.34,1.56,.64,1); }
+        @keyframes winPop {
+            from{transform:scale(.92) translateY(8px);opacity:0}
+            to{transform:scale(1) translateY(0);opacity:1}
+        }
+        .win-head {
+            display:flex;justify-content:space-between;align-items:center;
+            padding:0 11px;height:34px;background:rgba(11,11,19,.98);
+            border-bottom:1px solid var(--border);cursor:move;flex-shrink:0;
+        }
+        .whl { display:flex;align-items:center;gap:7px; }
+        .w-icon { font-size:.85rem; }
+        .w-title { font-family:var(--display);font-size:.5rem;letter-spacing:.18em;color:var(--fg2); }
+        .win-ctrls { display:flex;gap:5px;align-items:center; }
+        .wbtn {
+            width:11px;height:11px;border-radius:50%;border:none;cursor:pointer;flex-shrink:0;
+        }
+        .wbtn.cl { background:#ff5f57; }
+        .wbtn.mn { background:#ffbd2e; }
+        .wbtn.mx { background:#28c840; }
+        .wbtn:hover { filter:brightness(1.3); }
+        .enc-btn {
+            background:var(--bg2);border:1px solid var(--border);
+            color:var(--fg2);font-family:var(--mono);font-size:.48rem;
+            padding:2px 7px;border-radius:3px;cursor:pointer;letter-spacing:.07em;
+        }
+        .enc-btn:hover { border-color:var(--accent);color:var(--fg); }
+        .enc-btn.on { border-color:var(--accent2);color:var(--accent2); }
+        .win-body {
+            flex:1;overflow:auto;padding:13px;
+        }
+        .win-body::-webkit-scrollbar { width:3px; }
+        .win-body::-webkit-scrollbar-thumb { background:var(--border); }
+        .win-resize {
+            position:absolute;bottom:0;right:0;
+            width:14px;height:14px;cursor:se-resize;
+            opacity:.35;
+            background:linear-gradient(135deg,transparent 50%,var(--fg3) 50%);
+        }
+
+        /* ═══ VAULT ═══ */
+        .srch {
+            width:100%;background:var(--bg2);border:1px solid var(--border);
+            border-radius:var(--r);color:var(--fg);font-family:var(--mono);
+            font-size:.58rem;padding:7px 11px;outline:none;letter-spacing:.07em;
+            margin-bottom:11px;
+        }
+        .srch:focus { border-color:var(--accent); }
+        .grid-v {
+            display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:9px;
+        }
+        .fc {
+            background:var(--bg3);border:1px solid var(--border);
+            border-radius:var(--r);padding:11px 9px;text-align:center;
+            cursor:pointer;transition:border-color .15s,background .15s,transform .1s;
+            position:relative;overflow:hidden;
+        }
+        .fc::before {
+            content:'';position:absolute;inset:0;
+            background:linear-gradient(135deg,transparent 55%,rgba(255,0,60,.04));
+        }
+        .fc:hover { border-color:var(--accent2);background:rgba(0,255,170,.04);transform:translateY(-2px); }
+        .fc-icon { font-size:1.5rem;margin-bottom:5px; }
+        .fc-name { font-size:.48rem;color:var(--fg2);word-break:break-all;line-height:1.4; }
+        .fc-enc { position:absolute;top:4px;right:4px;font-size:.55rem;opacity:.45; }
+        .fc-acts { display:none;gap:3px;margin-top:7px; }
+        .fc:hover .fc-acts { display:flex;justify-content:center;flex-wrap:wrap; }
+        .fc-btn {
+            background:var(--bg2);border:1px solid var(--border);
+            color:var(--fg2);font-family:var(--mono);font-size:.42rem;
+            padding:2px 5px;border-radius:2px;cursor:pointer;
+        }
+        .fc-btn:hover { border-color:var(--accent);color:var(--fg); }
+
+        /* ═══ GALLERY ═══ */
+        .gal-body { overflow-y:auto; }
+        .gal-sect { margin-bottom:18px; }
+        .gal-title {
+            font-family:var(--display);font-size:.52rem;
+            letter-spacing:.18em;color:var(--accent);
+            margin-bottom:11px;padding-bottom:5px;
+            border-bottom:1px solid var(--border);
+        }
+        .gal-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:9px;
+        }
+        .gi {
+            position:relative;aspect-ratio:4/3;border-radius:var(--r);
+            overflow:hidden;cursor:pointer;border:1px solid var(--border);
+            background:var(--bg3);
+        }
+        .gi img,.gi video {
+            width:100%;height:100%;object-fit:cover;
+            transition:transform .3s ease;
+        }
+        .gi:hover img,.gi:hover video { transform:scale(1.06); }
+        .gi-ov {
+            position:absolute;inset:0;background:rgba(0,0,0,.6);
+            display:flex;flex-direction:column;
+            align-items:center;justify-content:center;
+            opacity:0;transition:opacity .2s;
+        }
+        .gi:hover .gi-ov { opacity:1; }
+        .gi-ov span { font-size:.47rem;color:#fff;letter-spacing:.09em;text-align:center;padding:0 6px; }
+
+        /* FIX: encrypted gallery — always visible lock overlay */
+        .gi.enc { border-color:rgba(255,170,0,.4); }
+        .gi.enc .enc-cover {
+            position:absolute;inset:0;
+            background:rgba(5,5,8,.92);
+            display:flex;flex-direction:column;
+            align-items:center;justify-content:center;gap:5px;
+            transition:background .2s;
+        }
+        .gi.enc:hover .enc-cover { background:rgba(5,5,8,.65); }
+        .gi.enc .ec-icon { font-size:1.4rem; }
+        .gi.enc .ec-name {
+            font-size:.42rem;color:var(--accent3);
+            letter-spacing:.09em;text-align:center;padding:0 6px;
+        }
+
+        /* ═══ AUDIO ═══ */
+        .aud-body { overflow-y:auto; }
+        .now-play {
+            font-size:.58rem;color:var(--accent2);
+            margin-bottom:9px;letter-spacing:.1em;min-height:18px;
+        }
+        #audio-player {
+            width:100%;filter:invert(1) hue-rotate(135deg) brightness(.8);
+            margin-top:6px;
+        }
+        .aud-list { display:flex;flex-direction:column;gap:5px;margin-top:12px; }
+        .atrack {
+            display:flex;align-items:center;gap:9px;
+            padding:7px 9px;background:var(--bg3);
+            border:1px solid var(--border);border-radius:var(--r);
+            cursor:pointer;transition:border-color .15s;
+            font-size:.56rem;color:var(--fg2);
+        }
+        .atrack:hover { border-color:var(--accent2);color:var(--fg); }
+        .atrack.playing { border-color:var(--accent2);color:var(--accent2); }
+        .atrack-icon { font-size:.8rem; }
+        /* visualizer */
+        .vis {
+            display:none;align-items:flex-end;gap:2px;height:18px;margin-left:auto;
+        }
+        .vis.on { display:flex; }
+        .vbar {
+            width:3px;background:var(--accent2);border-radius:1px;
+            animation:vPulse .5s ease infinite alternate;
+        }
+        .vbar:nth-child(1){animation-delay:.00s}
+        .vbar:nth-child(2){animation-delay:.10s}
+        .vbar:nth-child(3){animation-delay:.20s}
+        .vbar:nth-child(4){animation-delay:.15s}
+        .vbar:nth-child(5){animation-delay:.05s}
+        @keyframes vPulse {
+            from{height:3px;opacity:.4} to{height:15px;opacity:1}
+        }
+
+        /* ═══ AI WINDOW ═══ */
+        .ai-body { display:flex;flex-direction:column;height:100%;padding:0; }
+        .ai-key-bar {
+            display:flex;gap:5px;align-items:center;
+            padding:7px 11px;border-bottom:1px solid var(--border);
+            background:rgba(9,9,16,.85);flex-shrink:0;
+        }
+        .ai-key-bar input {
+            flex:1;background:var(--bg2);border:1px solid var(--border);
+            color:var(--fg);font-family:var(--mono);font-size:.52rem;
+            padding:5px 8px;border-radius:3px;outline:none;
+        }
+        .ai-key-bar input:focus { border-color:var(--accent4); }
+        .ai-act-btn {
+            background:rgba(0,170,255,.12);border:1px solid rgba(0,170,255,.4);
+            color:var(--accent4);font-family:var(--mono);font-size:.48rem;
+            padding:5px 8px;border-radius:3px;cursor:pointer;white-space:nowrap;
+        }
+        .ai-msgs {
+            flex:1;overflow-y:auto;padding:11px;
+            display:flex;flex-direction:column;gap:9px;min-height:0;
+        }
+        .ai-msgs::-webkit-scrollbar { width:3px; }
+        .ai-msgs::-webkit-scrollbar-thumb { background:var(--border); }
+        .am { display:flex;gap:7px;animation:fadeSlide .2s ease; }
+        .am.usr { flex-direction:row-reverse; }
+        .am-av {
+            width:26px;height:26px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            font-size:.65rem;flex-shrink:0;border:1px solid var(--border);
+        }
+        .am.usr .am-av { background:rgba(255,0,60,.14);border-color:rgba(255,0,60,.3); }
+        .am.bot .am-av { background:rgba(0,170,255,.14);border-color:rgba(0,170,255,.3); }
+        .am-bub {
+            max-width:75%;padding:7px 11px;border-radius:5px;
+            font-size:.58rem;line-height:1.65;letter-spacing:.03em;
+        }
+        .am.usr .am-bub {
+            background:rgba(255,0,60,.09);border:1px solid rgba(255,0,60,.2);
+        }
+        .am.bot .am-bub {
+            background:rgba(0,170,255,.07);border:1px solid rgba(0,170,255,.2);
+        }
+        .ai-in-row {
+            display:flex;gap:5px;padding:9px 11px;
+            border-top:1px solid var(--border);
+            background:rgba(9,9,16,.85);flex-shrink:0;
+        }
+        .ai-in-row input {
+            flex:1;background:var(--bg2);border:1px solid var(--border);
+            color:var(--fg);font-family:var(--mono);font-size:.6rem;
+            padding:7px 9px;border-radius:var(--r);outline:none;
+        }
+        .ai-in-row input:focus { border-color:var(--accent4); }
+        .ai-send {
+            background:rgba(0,170,255,.14);border:1px solid rgba(0,170,255,.4);
+            color:var(--accent4);font-family:var(--mono);font-size:.58rem;
+            padding:7px 13px;border-radius:var(--r);cursor:pointer;
+        }
+        .ai-send:hover { background:rgba(0,170,255,.25); }
+        .typing { display:flex;align-items:center;gap:3px;padding:3px 0; }
+        .typing span {
+            width:5px;height:5px;background:var(--accent4);
+            border-radius:50%;animation:tdot 1s ease infinite;
+        }
+        .typing span:nth-child(2){animation-delay:.2s}
+        .typing span:nth-child(3){animation-delay:.4s}
+        @keyframes tdot {
+            0%,100%{opacity:.3;transform:translateY(0)}
+            50%{opacity:1;transform:translateY(-3px)}
+        }
+
+        /* ═══ SYSMON ═══ */
+        .sm-body {
+            display:grid;grid-template-columns:1fr 1fr;
+            gap:11px;padding:13px;overflow-y:auto;
+        }
+        .sm-card {
+            background:var(--bg3);border:1px solid var(--border);
+            border-radius:var(--r);padding:11px;
+        }
+        .sm-lbl { font-size:.47rem;color:var(--fg3);letter-spacing:.14em;margin-bottom:5px; }
+        .sm-val { font-family:var(--display);font-size:1.35rem;font-weight:700;color:var(--accent2); }
+        .sm-val.warn { color:var(--accent3); }
+        .sm-val.dng  { color:var(--accent); }
+        .sm-unit { font-size:.45rem;color:var(--fg3); }
+        .sm-bw { width:100%;height:3px;background:var(--bg2);border-radius:2px;margin-top:7px;overflow:hidden; }
+        .sm-bar { height:100%;border-radius:2px;transition:width 1s ease; }
+        .sm-bar.cpu  { background:linear-gradient(90deg,var(--accent),#ff6688); }
+        .sm-bar.ram  { background:linear-gradient(90deg,var(--accent4),#66aaff); }
+        .sm-bar.net  { background:linear-gradient(90deg,var(--accent2),#66ffcc); }
+        .sm-bar.disk { background:linear-gradient(90deg,var(--accent3),#ffcc66); }
+        .sm-procs {
+            grid-column:1/-1;background:var(--bg3);
+            border:1px solid var(--border);border-radius:var(--r);padding:11px;
+        }
+        .sm-ph {
+            display:grid;grid-template-columns:1fr auto auto auto;
+            gap:10px;font-size:.45rem;color:var(--fg3);letter-spacing:.1em;
+            padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:5px;
+        }
+        .sm-pr {
+            display:grid;grid-template-columns:1fr auto auto auto;
+            gap:10px;font-size:.5rem;color:var(--fg2);padding:3px 0;
+        }
+        .pname { color:var(--accent2); }
+
+        /* ═══ BUTTONS ═══ */
+        .pbtn {
+            background:linear-gradient(135deg,var(--accent),rgba(255,0,60,.7));
+            border:none;color:#fff;font-family:var(--mono);font-size:.58rem;
+            letter-spacing:.14em;padding:8px 16px;border-radius:var(--r);
+            cursor:pointer;transition:filter .15s,transform .1s;
+            box-shadow:0 4px 14px rgba(255,0,60,.3);
+        }
+        .pbtn:hover { filter:brightness(1.2);transform:translateY(-1px); }
+        .pbtn:active { transform:translateY(0); }
+
+        /* ═══ EDITOR ═══ */
+        .ed-ta {
+            flex:1;width:100%;min-height:190px;
+            background:var(--bg2);border:1px solid var(--border);
+            border-radius:var(--r);color:var(--fg);font-family:var(--mono);
+            font-size:.6rem;padding:11px;resize:vertical;outline:none;
+            line-height:1.72;letter-spacing:.03em;
+        }
+        .ed-ta:focus { border-color:var(--accent2); }
+
+        /* ═══ CREADOR ═══ */
+        .cr-body { overflow-y:auto;padding:13px; }
+        .cr-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:13px;margin-bottom:13px; }
+        .up-sec {
+            background:var(--bg3);border:1px solid var(--border);
+            border-radius:var(--r);padding:13px;
+            display:flex;flex-direction:column;gap:9px;
+        }
+        .sec-head {
+            font-size:.52rem;letter-spacing:.14em;color:var(--accent);
+            display:flex;align-items:center;gap:5px;
+        }
+        .up-sec input[type="text"] {
+            width:100%;background:var(--bg2);border:1px solid var(--border);
+            color:var(--fg);font-family:var(--mono);font-size:.55rem;
+            padding:6px 9px;border-radius:var(--r);outline:none;
+        }
+        .dz {
+            border:1px dashed rgba(255,0,60,.38);border-radius:var(--r);
+            padding:18px;text-align:center;cursor:pointer;
+            transition:border-color .15s,background .15s;
+            display:flex;flex-direction:column;align-items:center;gap:5px;
+        }
+        .dz:hover { border-color:var(--accent);background:rgba(255,0,60,.04); }
+        .dz.drag-over { border-color:var(--accent2);background:rgba(0,255,170,.04); }
+        .dz-icon { font-size:1.4rem; }
+        .dz-hint { font-size:.55rem;color:var(--fg2); }
+        .dz-sub  { font-size:.47rem;color:var(--fg3);letter-spacing:.07em; }
+        .enc-lbl { font-size:.52rem;color:var(--fg2);display:flex;align-items:center;gap:5px;cursor:pointer; }
+        .up-prog { display:none;height:3px;background:var(--bg2);border-radius:2px;overflow:hidden; }
+        .up-progb { height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0%;transition:width .2s;border-radius:2px; }
+        .cmd-sec {
+            background:var(--bg3);border:1px solid var(--border);
+            border-radius:var(--r);padding:13px;
+        }
+        .cmd-row { display:flex;flex-direction:column;gap:9px;margin-top:9px; }
+        .cmd-row input,.cmd-row textarea {
+            background:var(--bg2);border:1px solid var(--border);
+            color:var(--fg);font-family:var(--mono);font-size:.55rem;
+            padding:6px 9px;border-radius:var(--r);outline:none;
+        }
+        .cmd-row textarea { min-height:75px;resize:vertical; }
+
+        /* ═══ STREAM ═══ */
+        .sp {
+            position:relative;border:1px solid var(--border);
+            border-radius:var(--r);overflow:hidden;background:var(--bg2);
+        }
+        .sp-lbl {
+            position:absolute;top:0;left:0;right:0;
+            padding:4px 8px;background:rgba(0,0,0,.72);
+            font-size:.48rem;color:var(--fg2);z-index:2;
+            display:flex;justify-content:space-between;align-items:center;
+        }
+        .sp-close {
+            background:transparent;border:none;
+            color:var(--accent);cursor:pointer;font-size:.75rem;line-height:1;
+        }
+        .sp iframe { width:100%;height:220px;border:none;display:block; }
+
+        /* ═══ SCROLLBAR ═══ */
+        ::-webkit-scrollbar { width:3px;height:3px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:var(--border);border-radius:2px; }
+
+        /* ═══ SENTINEL ═══ */
+        .sent-active { animation:sPulse 2s ease infinite; }
+        @keyframes sPulse {
+            0%,100%{filter:drop-shadow(0 0 0 transparent)}
+            50%{filter:drop-shadow(0 0 6px var(--accent2))}
+        }
+    </style>
 </head>
 <body oncontextmenu="return false;">
 
-<!-- CAPA DE BOOT -->
-<div id="boot-screen">
+<!-- CURSOR -->
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+
+<!-- FX LAYERS -->
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<canvas id="pcv"></canvas>
+
+<!-- TICKER -->
+<div id="ticker">
+    <div id="ticker-lbl">◈ SYS_FEED</div>
+    <div id="ticker-wrap"><div id="ticker-txt"></div></div>
+</div>
+
+<!-- TOASTS -->
+<div id="toasts"></div>
+
+<!-- COMMAND PALETTE -->
+<div id="palette">
+    <input id="pal-search" type="text" placeholder="BUSCAR MÓDULO..." autocomplete="off">
+    <div id="pal-results"></div>
+</div>
+
+<!-- BOOT -->
+<div id="boot">
     <div class="boot-content">
         <div class="boot-logo">ARCHIVO_404</div>
-        <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
-        <div class="boot-log" id="boot-log"></div>
+        <div class="boot-bar-wrap"><div id="boot-bar"></div></div>
+        <div id="boot-log"></div>
     </div>
 </div>
 
-<!-- CAPA DE PÁNICO -->
-<div id="panic-layer">
-    <div class="glitch-text" data-text="CRITICAL_ERROR">CRITICAL_ERROR</div>
+<!-- PANIC -->
+<div id="panic">
+    <div class="glitch" data-t="CRITICAL_ERROR">CRITICAL_ERROR</div>
     <p class="panic-sub">WIPING_ALL_SECTORS...</p>
 </div>
 
-<!-- MODAL CLAVE 404 -->
-<div id="key-modal-overlay" class="key-modal-overlay" onclick="closeKeyModal()">
+<!-- KEY MODAL -->
+<div id="key-modal-overlay" class="key-modal-overlay">
     <div class="key-modal" onclick="event.stopPropagation()">
         <div class="key-modal-icon">🔐</div>
         <h3>ACCESO ENCRIPTADO</h3>
         <p>INGRESA LA CLAVE DE SEGURIDAD</p>
-        <input type="password" id="key-input" placeholder="····" maxlength="10" autocomplete="off">
-        <button class="primary-btn" onclick="submitKey()">VERIFICAR IDENTIDAD</button>
+        <input type="password" id="key-input" placeholder="····" maxlength="10" autocomplete="off"
+               onkeydown="if(event.key==='Enter')submitKey()">
+        <button class="pbtn" onclick="submitKey()">VERIFICAR IDENTIDAD</button>
         <p id="key-error">⚠ CLAVE INCORRECTA — ACCESO DENEGADO</p>
     </div>
 </div>
 
-<!-- MODAL VISOR DE FOTO (LIGHTBOX) -->
-<div id="lightbox" class="lightbox-overlay" onclick="closeLightbox()">
-    <div class="lightbox-content" onclick="event.stopPropagation()">
-        <button class="lightbox-close" onclick="closeLightbox()">×</button>
-        <div id="lightbox-media"></div>
-        <div id="lightbox-name"></div>
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+    <div class="lb-content" onclick="event.stopPropagation()">
+        <button class="lb-close" onclick="closeLightbox()">×</button>
+        <div id="lb-media"></div>
+        <div id="lb-name"></div>
     </div>
 </div>
 
 <!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-        <span class="logo-icon">⬡</span>
-        <span class="logo-text">A404</span>
+    <div class="sb-logo">
+        <span class="sb-logo-i">⬡</span>
+        <span>A404</span>
     </div>
-    <div class="side-item" onclick="openWin('w-files')">
-        <span class="side-icon">📂</span><span class="side-label">BÓVEDA</span>
-    </div>
-    <div class="side-item" onclick="openGallery()">
-        <span class="side-icon">🎞</span><span class="side-label">GALERÍA</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-audio')">
-        <span class="side-icon">🎵</span><span class="side-label">FRECUENCIAS</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-stream')">
-        <span class="side-icon">📺</span><span class="side-label">STREAM</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-notes')">
-        <span class="side-icon">📝</span><span class="side-label">BITÁCORA</span>
-    </div>
-    <div class="side-item" onclick="openWin('w-tasks')">
-        <span class="side-icon">🎯</span><span class="side-label">OBJETIVOS</span>
-    </div>
-    <div class="side-divider"></div>
-    <div class="side-item" onclick="toggleSentinel()">
-        <span class="side-icon sentinel-icon">🛡</span><span class="side-label">CENTINELA</span>
-    </div>
-    <div class="side-item danger-item" onclick="panicAbort()">
-        <span class="side-icon">⏻</span><span class="side-label">ABORTAR</span>
-    </div>
+    <div class="si" onclick="openWin('w-files')"   data-tip="BÓVEDA">    <span class="si-icon">📂</span><span class="si-lbl">BÓVEDA</span></div>
+    <div class="si" onclick="openGallery()"         data-tip="GALERÍA">   <span class="si-icon">🎞</span><span class="si-lbl">GALERÍA</span></div>
+    <div class="si" onclick="openWin('w-audio')"    data-tip="AUDIO">     <span class="si-icon">🎵</span><span class="si-lbl">AUDIO</span></div>
+    <div class="si" onclick="openWin('w-stream')"   data-tip="STREAM">    <span class="si-icon">📺</span><span class="si-lbl">STREAM</span></div>
+    <div class="si" onclick="openWin('w-notes')"    data-tip="BITÁCORA">  <span class="si-icon">📝</span><span class="si-lbl">NOTAS</span></div>
+    <div class="si" onclick="openWin('w-tasks')"    data-tip="OBJETIVOS"> <span class="si-icon">🎯</span><span class="si-lbl">METAS</span></div>
+    <div class="si" onclick="openWin('w-ai')"       data-tip="CORE AI">   <span class="si-icon">🤖</span><span class="si-lbl">AI</span></div>
+    <div class="si" onclick="openWin('w-sysmon')"   data-tip="MONITOR">   <span class="si-icon">📊</span><span class="si-lbl">MON</span></div>
+    <div class="si" onclick="openWin('w-creador')"  data-tip="ADMIN">     <span class="si-icon">⚙</span><span class="si-lbl">NÚCLEO</span></div>
+    <div class="si-div"></div>
+    <div class="si" onclick="toggleSentinel()"      data-tip="CENTINELA"> <span class="si-icon sentinel-icon">🛡</span><span class="si-lbl">VIGÍA</span></div>
+    <div class="si si-danger" onclick="panicAbort()" data-tip="ABORTAR">  <span class="si-icon">⏻</span><span class="si-lbl">ABORT</span></div>
 </nav>
 
-<!-- ÁREA PRINCIPAL -->
-<main class="main-stage">
-    <header class="system-header">
+<!-- MAIN STAGE -->
+<main class="stage">
+    <header class="s-header">
         <div class="title-group">
             <h1 class="main-title" data-text="ARCHIVO 404">ARCHIVO 404</h1>
-            <p class="subtitle">USER: LENIN // STATUS: <span class="status-online">ENCRYPTED ●</span></p>
+            <p class="subtitle">USER: LENIN // STATUS: <span class="status-online">ENCRYPTED ●</span> // [Ctrl+Space] PALETA</p>
         </div>
-        <div class="header-right">
-            <div class="status-badge" id="uptime">UPTIME: 00:00:00</div>
-            <div class="firebase-badge" id="fb-status">⬤ CONECTANDO...</div>
+        <div class="h-right">
+            <div class="h-badge" id="uptime">UPTIME: 00:00:00</div>
+            <div id="clock">--:--:--</div>
+            <div id="fb-status" class="h-badge">⬤ CONECTANDO...</div>
         </div>
     </header>
 
-    <section class="terminal-container">
-        <div class="terminal-topbar">
-            <span class="terminal-dot red"></span>
-            <span class="terminal-dot yellow"></span>
-            <span class="terminal-dot green"></span>
-            <span class="terminal-title">CORE_TERMINAL v3.0</span>
+    <section class="term-wrap">
+        <div class="term-bar">
+            <span class="tdot r"></span>
+            <span class="tdot y"></span>
+            <span class="tdot g"></span>
+            <span class="tbar-title">CORE_TERMINAL v4.0</span>
         </div>
         <div id="output-stream"></div>
-        <div class="input-line">
+        <div class="input-row">
             <span class="prompt">root@404:~$</span>
             <input type="text" id="main-input" placeholder="ingrese comando..." autocomplete="off" spellcheck="false">
         </div>
     </section>
 </main>
 
-<!-- ═══════════════════ VENTANAS FLOTANTES ═══════════════════ -->
+<!-- ═══════════════ VENTANAS ═══════════════ -->
 
 <!-- BÓVEDA -->
 <div id="w-files" class="win" style="top:8%;left:12%;width:680px;height:500px;">
     <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📂</span><span class="win-title">SECTORES DE MEMORIA</span></div>
-        <div class="win-controls">
-            <button class="enc-toggle-btn" id="vault-enc-btn" onclick="toggleVaultEncrypted()">🔒 CIFRADOS</button>
-            <button class="win-btn close" onclick="closeWin('w-files')"></button>
+        <div class="whl"><span class="w-icon">📂</span><span class="w-title">SECTORES DE MEMORIA</span></div>
+        <div class="win-ctrls">
+            <button class="enc-btn" id="vault-enc-btn" onclick="toggleVaultEncrypted()">🔒 CIFRADOS</button>
+            <button class="wbtn mn" onclick="minimizeWin('w-files')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-files')"></button>
         </div>
     </div>
     <div class="win-body">
-        <input type="text" id="file-filter" placeholder="FILTRAR SECTORES..." oninput="renderVault()" class="search-input">
-        <div id="vault-grid" class="grid-view"></div>
+        <input type="text" id="file-filter" placeholder="FILTRAR SECTORES..." oninput="renderVault()" class="srch">
+        <div id="vault-grid" class="grid-v"></div>
     </div>
+    <div class="win-resize"></div>
 </div>
 
 <!-- EDITOR -->
 <div id="w-editor" class="win" style="top:12%;left:18%;width:740px;height:540px;">
     <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">✏</span><span class="win-title" id="edit-filename">EDITOR DE DATOS</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-editor')"></button></div>
+        <div class="whl"><span class="w-icon">✏</span><span class="w-title" id="edit-filename">EDITOR DE DATOS</span></div>
+        <div class="win-ctrls">
+            <button class="wbtn mn" onclick="minimizeWin('w-editor')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-editor')"></button>
+        </div>
     </div>
     <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="editor-field" class="editor-textarea" spellcheck="false"></textarea>
-        <button class="primary-btn" onclick="commitFile()">⟳ SINCRONIZAR CAMBIOS</button>
+        <textarea id="editor-field" class="ed-ta" spellcheck="false"></textarea>
+        <button class="pbtn" onclick="commitFile()">⟳ SINCRONIZAR CAMBIOS</button>
     </div>
+    <div class="win-resize"></div>
 </div>
 
-<!-- GALERÍA -->
+<!-- GALERÍA — grid fix: encrypted items siempre visibles -->
 <div id="w-gallery" class="win" style="top:5%;left:8%;width:900px;height:620px;">
     <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎞</span><span class="win-title">GALERÍA VISUAL</span></div>
-        <div class="win-controls">
-            <button class="enc-toggle-btn" id="gallery-enc-btn" onclick="toggleGalleryEncrypted()">🔒 CIFRADOS</button>
-            <button class="win-btn close" onclick="closeWin('w-gallery')"></button>
+        <div class="whl"><span class="w-icon">🎞</span><span class="w-title">GALERÍA VISUAL</span></div>
+        <div class="win-ctrls">
+            <button class="enc-btn" id="gallery-enc-btn" onclick="toggleGalleryEncrypted()">🔒 CIFRADOS</button>
+            <button class="wbtn mn" onclick="minimizeWin('w-gallery')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-gallery')"></button>
         </div>
     </div>
-    <div class="win-body gallery-body">
-        <div class="gallery-section">
-            <div class="gallery-section-title">📷 IMÁGENES</div>
-            <div id="gallery-photos" class="gallery-grid"></div>
+    <div class="win-body gal-body">
+        <div class="gal-sect">
+            <div class="gal-title">📷 IMÁGENES</div>
+            <div id="gallery-photos" class="gal-grid"></div>
         </div>
-        <div class="gallery-section">
-            <div class="gallery-section-title">🎬 VIDEOS</div>
-            <div id="gallery-videos" class="gallery-grid"></div>
+        <div class="gal-sect">
+            <div class="gal-title">🎬 VIDEOS</div>
+            <div id="gallery-videos" class="gal-grid"></div>
         </div>
     </div>
+    <div class="win-resize"></div>
 </div>
 
 <!-- FRECUENCIAS -->
-<div id="w-audio" class="win" style="top:45%;left:35%;width:460px;height:360px;">
+<div id="w-audio" class="win" style="top:45%;left:35%;width:460px;height:380px;">
     <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎵</span><span class="win-title">FRECUENCIAS DE AUDIO</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-audio')"></button></div>
-    </div>
-    <div class="win-body audio-body">
-        <div class="audio-player-wrap">
-            <div id="now-playing" class="now-playing">— SIN PISTA ACTIVA —</div>
-            <audio id="audio-player" controls></audio>
+        <div class="whl"><span class="w-icon">🎵</span><span class="w-title">FRECUENCIAS DE AUDIO</span></div>
+        <div class="win-ctrls">
+            <button class="wbtn mn" onclick="minimizeWin('w-audio')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-audio')"></button>
         </div>
-        <div id="audio-list" class="audio-list"></div>
     </div>
+    <div class="win-body aud-body">
+        <div id="now-playing" class="now-play">— SIN PISTA ACTIVA —</div>
+        <div id="vis-bars" class="vis">
+            <span class="vbar"></span><span class="vbar"></span>
+            <span class="vbar"></span><span class="vbar"></span><span class="vbar"></span>
+        </div>
+        <audio id="audio-player" controls></audio>
+        <div id="audio-list" class="aud-list"></div>
+    </div>
+    <div class="win-resize"></div>
 </div>
 
-<!-- ═══ PANEL STREAM DE VIDEO ═══ -->
+<!-- STREAM -->
 <div id="w-stream" class="win" style="top:3%;left:5%;width:1100px;height:680px;">
     <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📺</span><span class="win-title">STREAM — MONITOR DE VIDEO</span></div>
-        <div class="win-controls">
-            <button class="win-btn close" onclick="closeWin('w-stream')"></button>
+        <div class="whl"><span class="w-icon">📺</span><span class="w-title">STREAM — MONITOR DE VIDEO</span></div>
+        <div class="win-ctrls">
+            <button class="wbtn mn" onclick="minimizeWin('w-stream')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-stream')"></button>
         </div>
     </div>
     <div class="win-body" style="display:flex;flex-direction:column;gap:10px;padding:12px;">
-
-        <!-- Barra de agregar URL -->
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <input type="text" id="stream-url-input" placeholder="Pega URL de YouTube, Twitch, cualquier video..." autocomplete="off"
-                style="flex:1;min-width:200px;background:var(--bg2,#111);color:var(--fg,#1a1a1a);border:1px solid var(--accent,#ff003c);padding:7px 12px;font-family:inherit;font-size:0.7rem;border-radius:4px;outline:none;">
+            <input type="text" id="stream-url-input" placeholder="URL de YouTube, Twitch, video..." autocomplete="off"
+                style="flex:1;min-width:200px;background:var(--bg2);color:var(--fg);border:1px solid var(--accent);padding:7px 12px;font-family:inherit;font-size:.68rem;border-radius:4px;outline:none;">
             <input type="text" id="stream-label-input" placeholder="Nombre (opcional)" autocomplete="off"
-                style="width:160px;background:var(--bg2,#111);color:var(--fg,#1a1a1a);border:1px solid #333;padding:7px 12px;font-family:inherit;font-size:0.7rem;border-radius:4px;outline:none;">
-            <button onclick="addStreamPanel()" class="primary-btn" style="white-space:nowrap;padding:7px 16px;">+ AGREGAR</button>
-            <button onclick="clearAllPanels()" style="background:transparent;color:#666;border:1px solid #333;padding:7px 12px;font-family:inherit;font-size:0.65rem;border-radius:4px;cursor:pointer;white-space:nowrap;">✕ LIMPIAR TODO</button>
-            <span id="stream-count" style="color:#555;font-size:0.6rem;white-space:nowrap;">0 / 10 STREAMS</span>
+                style="width:155px;background:var(--bg2);color:var(--fg);border:1px solid var(--fg3);padding:7px 12px;font-family:inherit;font-size:.68rem;border-radius:4px;outline:none;">
+            <button onclick="addStreamPanel()" class="pbtn" style="padding:7px 15px;white-space:nowrap;">+ AGREGAR</button>
+            <button onclick="clearAllPanels()" style="background:transparent;color:var(--fg3);border:1px solid var(--fg3);padding:7px 11px;font-family:inherit;font-size:.62rem;border-radius:4px;cursor:pointer;">✕ LIMPIAR</button>
+            <span id="stream-count" style="color:var(--fg3);font-size:.58rem;">0 / 10</span>
         </div>
-
-        <!-- Mosaico de reproductores -->
-        <div id="stream-grid" style="
-            flex:1;
-            display:grid;
-            grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-            gap:8px;
-            overflow-y:auto;
-            min-height:400px;
-        "></div>
-
-        <div id="stream-empty" style="color:#333;font-size:0.65rem;text-align:center;padding:40px;letter-spacing:0.15em;">
-            SIN STREAMS — AGREGA UNA URL ARRIBA
-        </div>
+        <div id="stream-grid" style="flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:8px;overflow-y:auto;min-height:400px;"></div>
+        <div id="stream-empty" style="color:var(--fg3);font-size:.62rem;text-align:center;padding:40px;letter-spacing:.14em;">SIN STREAMS — AGREGA UNA URL</div>
     </div>
+    <div class="win-resize"></div>
 </div>
 
 <!-- BITÁCORA -->
 <div id="w-notes" class="win" style="top:18%;left:38%;width:500px;height:420px;">
     <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">📝</span><span class="win-title">BITÁCORA</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-notes')"></button></div>
+        <div class="whl"><span class="w-icon">📝</span><span class="w-title">BITÁCORA DEL OPERADOR</span></div>
+        <div class="win-ctrls">
+            <button class="wbtn mn" onclick="minimizeWin('w-notes')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-notes')"></button>
+        </div>
     </div>
     <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="txt-notes" class="editor-textarea" placeholder="Notas del operador..."></textarea>
-        <button class="primary-btn" onclick="saveStatic('notes')">GUARDAR BITÁCORA</button>
+        <textarea id="txt-notes" class="ed-ta" placeholder="Notas del operador..."></textarea>
+        <button class="pbtn" onclick="saveStatic('notes')">💾 GUARDAR BITÁCORA</button>
     </div>
+    <div class="win-resize"></div>
 </div>
 
 <!-- OBJETIVOS -->
 <div id="w-tasks" class="win" style="top:22%;left:42%;width:500px;height:420px;">
     <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">🎯</span><span class="win-title">OBJETIVOS</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-tasks')"></button></div>
+        <div class="whl"><span class="w-icon">🎯</span><span class="w-title">OBJETIVOS DEL SISTEMA</span></div>
+        <div class="win-ctrls">
+            <button class="wbtn mn" onclick="minimizeWin('w-tasks')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-tasks')"></button>
+        </div>
     </div>
     <div class="win-body" style="display:flex;flex-direction:column;gap:10px;">
-        <textarea id="txt-tasks" class="editor-textarea" placeholder="Objetivos del sistema..."></textarea>
-        <button class="primary-btn" onclick="saveStatic('tasks')">GUARDAR OBJETIVOS</button>
+        <textarea id="txt-tasks" class="ed-ta" placeholder="Objetivos del sistema..."></textarea>
+        <button class="pbtn" onclick="saveStatic('tasks')">💾 GUARDAR OBJETIVOS</button>
     </div>
+    <div class="win-resize"></div>
 </div>
 
-<!-- CREADOR -->
+<!-- ADMIN / CREADOR -->
 <div id="w-creador" class="win" style="top:3%;left:4%;width:1000px;height:640px;">
     <div class="win-head">
-        <div class="win-head-left"><span class="win-icon">⚙</span><span class="win-title">PANEL DE ADMINISTRACIÓN — NÚCLEO</span></div>
-        <div class="win-controls"><button class="win-btn close" onclick="closeWin('w-creador')"></button></div>
+        <div class="whl"><span class="w-icon">⚙</span><span class="w-title">PANEL DE ADMINISTRACIÓN — NÚCLEO</span></div>
+        <div class="win-ctrls">
+            <button class="wbtn mn" onclick="minimizeWin('w-creador')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-creador')"></button>
+        </div>
     </div>
-    <div class="win-body creador-body">
-        <div class="creador-grid">
-            <div class="upload-sector" id="sector-txt">
-                <div class="sector-header"><span class="sector-icon">📄</span> ARCHIVO DE TEXTO</div>
+    <div class="win-body cr-body">
+        <div class="cr-grid">
+            <div class="up-sec">
+                <div class="sec-head">📄 ARCHIVO DE TEXTO</div>
                 <input type="text" id="up-name-txt" placeholder="Nombre del archivo">
-                <div class="drop-zone" id="drop-txt" onclick="document.getElementById('upload-txt').click()">
-                    <span class="drop-icon">📄</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-txt-name">Acepta .txt .md .json .csv</span>
+                <div class="dz" id="drop-txt" onclick="document.getElementById('upload-txt').click()">
+                    <span class="dz-icon">📄</span>
+                    <span class="dz-hint">Click o arrastra aquí</span>
+                    <span class="dz-sub" id="drop-txt-name">Acepta .txt .md .json .csv</span>
                 </div>
                 <input type="file" id="upload-txt" style="display:none" accept=".txt,.md,.json,.csv,.log" onchange="handleUpload(this,'txt')">
-                <label class="enc-label"><input type="checkbox" id="enc-txt"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('txt')">REGISTRAR → BÓVEDA</button>
-                <div class="upload-progress" id="prog-txt"><div class="prog-bar" id="progbar-txt"></div></div>
+                <label class="enc-lbl"><input type="checkbox" id="enc-txt"> 🔒 ENCRIPTAR</label>
+                <button class="pbtn" onclick="saveFile('txt')">REGISTRAR → BÓVEDA</button>
+                <div class="up-prog" id="prog-txt"><div class="up-progb" id="progbar-txt"></div></div>
             </div>
-            <div class="upload-sector" id="sector-img">
-                <div class="sector-header"><span class="sector-icon">🖼</span> IMAGEN → GALERÍA</div>
+            <div class="up-sec">
+                <div class="sec-head">🖼 IMAGEN → GALERÍA</div>
                 <input type="text" id="up-name-img" placeholder="Nombre de la imagen">
-                <div class="drop-zone" id="drop-img" onclick="document.getElementById('upload-img').click()">
-                    <span class="drop-icon">🖼</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-img-name">Acepta jpg png gif webp</span>
+                <div class="dz" id="drop-img" onclick="document.getElementById('upload-img').click()">
+                    <span class="dz-icon">🖼</span>
+                    <span class="dz-hint">Click o arrastra aquí</span>
+                    <span class="dz-sub" id="drop-img-name">Acepta jpg png gif webp</span>
                 </div>
                 <input type="file" id="upload-img" style="display:none" accept="image/*" onchange="handleUpload(this,'img')">
-                <label class="enc-label"><input type="checkbox" id="enc-img"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('img')">REGISTRAR → GALERÍA</button>
-                <div class="upload-progress" id="prog-img"><div class="prog-bar" id="progbar-img"></div></div>
+                <label class="enc-lbl"><input type="checkbox" id="enc-img"> 🔒 ENCRIPTAR</label>
+                <button class="pbtn" onclick="saveFile('img')">REGISTRAR → GALERÍA</button>
+                <div class="up-prog" id="prog-img"><div class="up-progb" id="progbar-img"></div></div>
             </div>
-            <div class="upload-sector" id="sector-vid">
-                <div class="sector-header"><span class="sector-icon">🎬</span> VIDEO → GALERÍA</div>
+            <div class="up-sec">
+                <div class="sec-head">🎬 VIDEO → GALERÍA</div>
                 <input type="text" id="up-name-vid" placeholder="Nombre del video">
-                <div class="drop-zone" id="drop-vid" onclick="document.getElementById('upload-vid').click()">
-                    <span class="drop-icon">🎬</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-vid-name">Acepta mp4 webm mov</span>
+                <div class="dz" id="drop-vid" onclick="document.getElementById('upload-vid').click()">
+                    <span class="dz-icon">🎬</span>
+                    <span class="dz-hint">Click o arrastra aquí</span>
+                    <span class="dz-sub" id="drop-vid-name">Acepta mp4 webm mov</span>
                 </div>
                 <input type="file" id="upload-vid" style="display:none" accept="video/*" onchange="handleUpload(this,'vid')">
-                <label class="enc-label"><input type="checkbox" id="enc-vid"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('vid')">REGISTRAR → GALERÍA</button>
-                <div class="upload-progress" id="prog-vid"><div class="prog-bar" id="progbar-vid"></div></div>
+                <label class="enc-lbl"><input type="checkbox" id="enc-vid"> 🔒 ENCRIPTAR</label>
+                <button class="pbtn" onclick="saveFile('vid')">REGISTRAR → GALERÍA</button>
+                <div class="up-prog" id="prog-vid"><div class="up-progb" id="progbar-vid"></div></div>
             </div>
-            <div class="upload-sector" id="sector-aud">
-                <div class="sector-header"><span class="sector-icon">🎵</span> MÚSICA → FRECUENCIAS</div>
+            <div class="up-sec">
+                <div class="sec-head">🎵 MÚSICA → FRECUENCIAS</div>
                 <input type="text" id="up-name-aud" placeholder="Nombre de la pista">
-                <div class="drop-zone" id="drop-aud" onclick="document.getElementById('upload-aud').click()">
-                    <span class="drop-icon">🎵</span>
-                    <span class="drop-hint">Click o arrastra aquí</span>
-                    <span class="drop-sub" id="drop-aud-name">Acepta mp3 wav ogg flac</span>
+                <div class="dz" id="drop-aud" onclick="document.getElementById('upload-aud').click()">
+                    <span class="dz-icon">🎵</span>
+                    <span class="dz-hint">Click o arrastra aquí</span>
+                    <span class="dz-sub" id="drop-aud-name">Acepta mp3 wav ogg flac</span>
                 </div>
                 <input type="file" id="upload-aud" style="display:none" accept="audio/*" onchange="handleUpload(this,'aud')">
-                <label class="enc-label"><input type="checkbox" id="enc-aud"> 🔒 ENCRIPTAR (clave: 404)</label>
-                <button class="primary-btn upload-btn" onclick="saveFile('aud')">REGISTRAR → FRECUENCIAS</button>
-                <div class="upload-progress" id="prog-aud"><div class="prog-bar" id="progbar-aud"></div></div>
+                <label class="enc-lbl"><input type="checkbox" id="enc-aud"> 🔒 ENCRIPTAR</label>
+                <button class="pbtn" onclick="saveFile('aud')">REGISTRAR → FRECUENCIAS</button>
+                <div class="up-prog" id="prog-aud"><div class="up-progb" id="progbar-aud"></div></div>
             </div>
         </div>
-        <div class="cmd-sector">
-            <div class="sector-header"><span class="sector-icon">⌨</span> VINCULAR COMANDO TERMINAL</div>
+        <div class="cmd-sec">
+            <div class="sec-head">⌨ VINCULAR COMANDO TERMINAL</div>
             <div class="cmd-row">
                 <input type="text" id="cmd-name" placeholder="Nombre del comando (ej: saludo)">
                 <textarea id="cmd-res" placeholder="Respuesta del sistema..."></textarea>
-                <button class="primary-btn" onclick="saveCommand()">VINCULAR PROTOCOLO</button>
+                <button class="pbtn" onclick="saveCommand()">VINCULAR PROTOCOLO</button>
             </div>
         </div>
     </div>
+    <div class="win-resize"></div>
 </div>
 
-<!-- ═══ SCRIPTS ═══ -->
+<!-- ═══ NUEVA: CORE AI ═══ -->
+<div id="w-ai" class="win" style="top:6%;left:22%;width:510px;height:580px;">
+    <div class="win-head">
+        <div class="whl"><span class="w-icon">🤖</span><span class="w-title">CORE_AI — ASISTENTE NEURAL</span></div>
+        <div class="win-ctrls">
+            <button class="wbtn mn" onclick="minimizeWin('w-ai')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-ai')"></button>
+        </div>
+    </div>
+    <div class="ai-body">
+        <div class="ai-key-bar">
+            <input type="password" id="ai-key-input" placeholder="API KEY ANTHROPIC (para IA real)..." autocomplete="off">
+            <button class="ai-act-btn" onclick="setAiKey()">ACTIVAR</button>
+        </div>
+        <div class="ai-msgs" id="ai-msgs"></div>
+        <div class="ai-in-row">
+            <input type="text" id="ai-usr-in" placeholder="Consulta al sistema CORE_AI..." autocomplete="off">
+            <button class="ai-send" onclick="sendAi()">▶</button>
+        </div>
+    </div>
+    <div class="win-resize"></div>
+</div>
+
+<!-- ═══ NUEVA: SYSMON ═══ -->
+<div id="w-sysmon" class="win" style="top:10%;left:62%;width:470px;height:530px;">
+    <div class="win-head">
+        <div class="whl"><span class="w-icon">📊</span><span class="w-title">MONITOR DEL SISTEMA</span></div>
+        <div class="win-ctrls">
+            <button class="wbtn mn" onclick="minimizeWin('w-sysmon')"></button>
+            <button class="wbtn cl" onclick="closeWin('w-sysmon')"></button>
+        </div>
+    </div>
+    <div class="sm-body">
+        <div class="sm-card">
+            <div class="sm-lbl">CPU LOAD</div>
+            <div class="sm-val" id="sm-cpu">--<span class="sm-unit">%</span></div>
+            <div class="sm-bw"><div class="sm-bar cpu" id="sm-cpu-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sm-card">
+            <div class="sm-lbl">RAM USAGE</div>
+            <div class="sm-val" id="sm-ram">--<span class="sm-unit">%</span></div>
+            <div class="sm-bw"><div class="sm-bar ram" id="sm-ram-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sm-card">
+            <div class="sm-lbl">NET I/O</div>
+            <div class="sm-val" id="sm-net">--<span class="sm-unit">MB/s</span></div>
+            <div class="sm-bw"><div class="sm-bar net" id="sm-net-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sm-card">
+            <div class="sm-lbl">DISK I/O</div>
+            <div class="sm-val" id="sm-disk">--<span class="sm-unit">%</span></div>
+            <div class="sm-bw"><div class="sm-bar disk" id="sm-disk-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sm-procs">
+            <div class="sm-ph"><span>PROCESO</span><span>PID</span><span>CPU</span><span>MEM</span></div>
+            <div id="sm-procs"></div>
+        </div>
+    </div>
+    <div class="win-resize"></div>
+</div>
+
+<!-- SCRIPTS ORIGINALES -->
 <script type="module" src="js/firebase.js"></script>
 <script src="js/app.js"></script>
+
+<!-- ═══════════════════════════════════════════════
+     ARCHIVO 404  —  ENHANCED CORE v4.0
+     Cursor · Particles · Boot · Toast · Palette
+     Window Mgr · Drag · Resize · Clock · Ticker
+     Gallery Fix · SysMon · Mini AI · Terminal+
+════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ━━━━━━━━━━━━━━ CURSOR ━━━━━━━━━━━━━━ */
+(()=>{
+    const dot = document.getElementById('cur-dot');
+    const ring= document.getElementById('cur-ring');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',e=>{
+        mx=e.clientX; my=e.clientY;
+        dot.style.left=mx+'px'; dot.style.top=my+'px';
+    });
+    (function loop(){
+        rx+=(mx-rx)*.14; ry+=(my-ry)*.14;
+        ring.style.left=rx+'px'; ring.style.top=ry+'px';
+        requestAnimationFrame(loop);
+    })();
+    document.addEventListener('mousedown',()=>{ dot.style.width='13px';dot.style.height='13px'; });
+    document.addEventListener('mouseup',  ()=>{ dot.style.width='8px';dot.style.height='8px'; });
+    function scaleCursor(on){
+        ring.style.transform=`translate(-50%,-50%) scale(${on?1.6:1})`;
+    }
+    document.querySelectorAll('button,.si,.fc,.gi,.atrack,.win-head')
+        .forEach(el=>{ el.addEventListener('mouseenter',()=>scaleCursor(true));
+                       el.addEventListener('mouseleave',()=>scaleCursor(false)); });
+})();
+
+/* ━━━━━━━━━━━━━━ PARTICLES ━━━━━━━━━━━━━━ */
+(()=>{
+    const cv=document.getElementById('pcv');
+    const cx=cv.getContext('2d');
+    function rsz(){ cv.width=innerWidth; cv.height=innerHeight; }
+    rsz(); window.addEventListener('resize',rsz);
+    const pts=Array.from({length:55},()=>({
+        x:Math.random()*innerWidth,
+        y:Math.random()*innerHeight,
+        vx:(Math.random()-.5)*.28,
+        vy:(Math.random()-.5)*.28,
+        r:Math.random()*1.4+.3,
+        op:Math.random()*.45+.1,
+        col:Math.random()>.65?'#00ffaa':'#ff003c'
+    }));
+    (function draw(){
+        cx.clearRect(0,0,cv.width,cv.height);
+        pts.forEach(p=>{
+            p.x+=p.vx; p.y+=p.vy;
+            if(p.x<0)p.x=cv.width; if(p.x>cv.width)p.x=0;
+            if(p.y<0)p.y=cv.height;if(p.y>cv.height)p.y=0;
+            cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            cx.fillStyle=p.col; cx.globalAlpha=p.op; cx.fill();
+        });
+        cx.globalAlpha=.05;
+        for(let i=0;i<pts.length;i++)
+            for(let j=i+1;j<pts.length;j++){
+                const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+                if(dx*dx+dy*dy<13000){
+                    cx.beginPath();
+                    cx.moveTo(pts[i].x,pts[i].y);
+                    cx.lineTo(pts[j].x,pts[j].y);
+                    cx.strokeStyle='#ff003c'; cx.lineWidth=.4; cx.stroke();
+                }
+            }
+        cx.globalAlpha=1;
+        requestAnimationFrame(draw);
+    })();
+})();
+
+/* ━━━━━━━━━━━━━━ TICKER ━━━━━━━━━━━━━━ */
+(()=>{
+    const msgs=[
+        'SISTEMA OPERATIVO :: ARCHIVO_404 v4.0 — ACTIVO',
+        'ENCRIPTACIÓN AES-256 :: HABILITADA',
+        'SECTORES DE MEMORIA :: ÍNTEGROS',
+        'CENTINELA :: MODO PASIVO',
+        'FIREWALL :: ACTIVO — 0 INTRUSIONES DETECTADAS',
+        'NÚCLEO NEURAL :: ONLINE',
+        'FRECUENCIAS :: SINCRONIZADAS',
+        'PROTOCOLO DE EMERGENCIA :: EN ESPERA',
+        'UPLINK :: ESTABLECIDO — LATENCIA 4ms',
+        'BÓVEDA DE DATOS :: SELLADA',
+        'USUARIO: LENIN — ACCESO NIVEL OMEGA',
+    ];
+    document.getElementById('ticker-txt').textContent=msgs.join('  ◈  ');
+})();
+
+/* ━━━━━━━━━━━━━━ CLOCK ━━━━━━━━━━━━━━ */
+(()=>{
+    function tick(){
+        const n=new Date();
+        const pad=v=>String(v).padStart(2,'0');
+        document.getElementById('clock').textContent=
+            `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+    }
+    tick(); setInterval(tick,1000);
+})();
+
+/* ━━━━━━━━━━━━━━ UPTIME ━━━━━━━━━━━━━━ */
+(()=>{
+    let s=0;
+    setInterval(()=>{
+        s++;
+        const pad=v=>String(v).padStart(2,'0');
+        const el=document.getElementById('uptime');
+        if(el) el.textContent=`UPTIME: ${pad(Math.floor(s/3600))}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`;
+    },1000);
+})();
+
+/* ━━━━━━━━━━━━━━ BOOT ━━━━━━━━━━━━━━ */
+(()=>{
+    const bar=document.getElementById('boot-bar');
+    const log=document.getElementById('boot-log');
+    const scr=document.getElementById('boot');
+    const lines=[
+        {t:180, c:'ok',  msg:'BIOS CHECK',          pct:8},
+        {t:480, c:'ok',  msg:'LOADING KERNEL 4.0',  pct:18},
+        {t:800, c:'wrn', msg:'MOUNTING ENCRYPTED SECTORS', pct:33},
+        {t:1150,c:'ok',  msg:'DECRYPTION MODULE',   pct:47},
+        {t:1420,c:'ok',  msg:'NEURAL NETWORK',       pct:60},
+        {t:1700,c:'ok',  msg:'FIREWALL LAYER',       pct:73},
+        {t:1980,c:'ok',  msg:'SENTINEL PROTOCOL',   pct:85},
+        {t:2250,c:'ok',  msg:'PARTICLE RENDERER',   pct:93},
+        {t:2520,c:'ok',  msg:'SYSTEM READY — WELCOME BACK, OPERATOR LENIN', pct:100},
+    ];
+    lines.forEach(({t,c,msg,pct})=>setTimeout(()=>{
+        bar.style.width=pct+'%';
+        const d=document.createElement('div');
+        d.innerHTML=`> <span class="${c}">[${c.toUpperCase()}]</span> ${msg}`;
+        log.appendChild(d); log.scrollTop=log.scrollHeight;
+    },t));
+    setTimeout(()=>{
+        scr.style.transition='opacity .5s ease';
+        scr.style.opacity='0';
+        setTimeout(()=>{ scr.style.display='none'; toast('SISTEMA INICIADO','ok'); },500);
+    },2900);
+})();
+
+/* ━━━━━━━━━━━━━━ TOAST ━━━━━━━━━━━━━━ */
+function toast(msg,type='info'){
+    const c=document.getElementById('toasts');
+    const t=document.createElement('div');
+    t.className=`toast ${type==='ok'?'':type}`;
+    t.textContent=msg;
+    c.appendChild(t);
+    setTimeout(()=>t.remove(),3200);
+}
+
+/* ━━━━━━━━━━━━━━ WINDOW MANAGER ━━━━━━━━━━━━━━ */
+let zTop=300;
+
+function openWin(id){
+    const w=document.getElementById(id);
+    if(!w) return;
+    w.classList.add('vis');
+    w.style.zIndex=++zTop;
+    makeDraggable(w);
+    makeResizable(w);
+    if(id==='w-sysmon'){ updateSysmon(); if(!smInt) smInt=setInterval(updateSysmon,2000); }
+}
+
+function closeWin(id){
+    const w=document.getElementById(id);
+    if(!w) return;
+    w.style.transition='opacity .15s ease,transform .15s ease';
+    w.style.opacity='0'; w.style.transform='scale(.94)';
+    setTimeout(()=>{
+        w.classList.remove('vis');
+        w.style.cssText=w.style.cssText.replace(/opacity[^;]*;?|transform[^;]*;?|transition[^;]*;?/g,'');
+    },150);
+}
+
+function minimizeWin(id){
+    const w=document.getElementById(id);
+    if(!w) return;
+    if(w.dataset.min==='1'){
+        w.style.height=w.dataset.ph||'400px'; w.dataset.min='0';
+    } else {
+        w.dataset.ph=w.style.height; w.style.height='34px'; w.dataset.min='1';
+    }
+}
+
+function openGallery(){ openWin('w-gallery'); }
+
+/* ━━━ DRAG ━━━ */
+function makeDraggable(win){
+    if(win.dataset.drag) return; win.dataset.drag='1';
+    const head=win.querySelector('.win-head');
+    if(!head) return;
+    let ox=0,oy=0;
+    head.addEventListener('mousedown',e=>{
+        const t=e.target;
+        if(t.classList.contains('wbtn')||t.classList.contains('enc-btn')) return;
+        win.style.zIndex=++zTop;
+        const r=win.getBoundingClientRect();
+        ox=e.clientX-r.left; oy=e.clientY-r.top;
+        const mv=e=>{ win.style.left=Math.max(0,e.clientX-ox)+'px'; win.style.top=Math.max(0,e.clientY-oy)+'px'; };
+        const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
+        document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+    });
+}
+
+/* ━━━ RESIZE ━━━ */
+function makeResizable(win){
+    if(win.dataset.rsz) return; win.dataset.rsz='1';
+    const h=win.querySelector('.win-resize');
+    if(!h) return;
+    h.addEventListener('mousedown',e=>{
+        e.stopPropagation();
+        const sx=e.clientX,sy=e.clientY,sw=win.offsetWidth,sh=win.offsetHeight;
+        const mv=e=>{
+            win.style.width =Math.max(280,sw+e.clientX-sx)+'px';
+            win.style.height=Math.max(180,sh+e.clientY-sy)+'px';
+        };
+        const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
+        document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+    });
+}
+
+/* Focus on click */
+document.querySelectorAll('.win').forEach(w=>w.addEventListener('mousedown',()=>w.style.zIndex=++zTop));
+
+/* ━━━━━━━━━━━━━━ COMMAND PALETTE ━━━━━━━━━━━━━━ */
+const PAL_CMDS=[
+    {i:'📂',l:'Bóveda — Sectores de Memoria',fn:()=>openWin('w-files'),k:'B'},
+    {i:'🎞',l:'Galería Visual',fn:()=>openGallery(),k:'G'},
+    {i:'🎵',l:'Frecuencias de Audio',fn:()=>openWin('w-audio'),k:'A'},
+    {i:'📺',l:'Stream — Monitor de Video',fn:()=>openWin('w-stream'),k:'S'},
+    {i:'📝',l:'Bitácora del Operador',fn:()=>openWin('w-notes'),k:'N'},
+    {i:'🎯',l:'Objetivos del Sistema',fn:()=>openWin('w-tasks'),k:'O'},
+    {i:'🤖',l:'Core AI — Asistente Neural',fn:()=>openWin('w-ai'),k:'I'},
+    {i:'📊',l:'Monitor del Sistema',fn:()=>openWin('w-sysmon'),k:'M'},
+    {i:'⚙',l:'Panel de Administración',fn:()=>openWin('w-creador'),k:'P'},
+    {i:'🛡',l:'Toggle Centinela',fn:()=>{ if(typeof toggleSentinel!=='undefined')toggleSentinel(); },k:'C'},
+    {i:'⏻',l:'ABORTAR SISTEMA',fn:()=>{ if(typeof panicAbort!=='undefined')panicAbort(); },k:'!'},
+];
+
+function openPalette(){
+    document.getElementById('palette').classList.add('open');
+    const s=document.getElementById('pal-search');
+    s.value=''; renderPal(''); s.focus();
+}
+function closePalette(){ document.getElementById('palette').classList.remove('open'); }
+
+function renderPal(q){
+    const res=document.getElementById('pal-results');
+    const filtered=PAL_CMDS.filter(c=>c.l.toLowerCase().includes(q.toLowerCase()));
+    res.innerHTML=filtered.map((c,i)=>
+        `<div class="pal-item" onclick="runPal(${PAL_CMDS.indexOf(c)})">
+            <span class="pal-icon">${c.i}</span><span>${c.l}</span>
+            <span class="pal-key">${c.k}</span>
+        </div>`
+    ).join('');
+}
+
+function runPal(idx){ PAL_CMDS[idx].fn(); closePalette(); }
+
+document.getElementById('pal-search').addEventListener('input',e=>renderPal(e.target.value));
+document.getElementById('pal-search').addEventListener('keydown',e=>{
+    if(e.key==='Escape') closePalette();
+    if(e.key==='Enter'){ const f=document.querySelector('.pal-item'); if(f)f.click(); }
+});
+document.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.code==='Space'){
+        e.preventDefault();
+        document.getElementById('palette').classList.contains('open')?closePalette():openPalette();
+    }
+    if(e.key==='Escape') closePalette();
+});
+
+/* ━━━━━━━━━━━━━━ GALLERY FIX — encrypted always visible ━━━━━━━━━━━━━━ */
+function patchEncryptedGallery(){
+    document.querySelectorAll('.gi.enc,.gallery-item.enc,.gallery-item.encrypted').forEach(item=>{
+        // Remove bad hover-only cover patterns and replace with always-visible
+        let ec=item.querySelector('.enc-cover');
+        if(!ec){
+            ec=document.createElement('div');
+            ec.className='enc-cover';
+            const name=item.dataset.name||item.querySelector('img,video')?.alt||'CIFRADO';
+            ec.innerHTML=`<div class="ec-icon">🔒</div><div class="ec-name">${name}</div>`;
+            item.appendChild(ec);
+            item.classList.add('enc'); // ensure CSS class
+        }
+    });
+}
+// Observe gallery containers for new items
+['gallery-photos','gallery-videos'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) new MutationObserver(patchEncryptedGallery).observe(el,{childList:true,subtree:true});
+});
+
+/* ━━━━━━━━━━━━━━ KEY MODAL ━━━━━━━━━━━━━━ */
+function closeKeyModal(){
+    document.getElementById('key-modal-overlay').classList.remove('active');
+}
+function submitKey(){
+    const inp=document.getElementById('key-input');
+    const err=document.getElementById('key-error');
+    // Try original first
+    if(typeof window._origSubmitKey==='function'){ window._origSubmitKey(); return; }
+    if(inp.value==='404'){
+        closeKeyModal(); toast('ACCESO CONCEDIDO');
+        if(window._pendingDecryptFn) window._pendingDecryptFn();
+    } else {
+        err.style.display='block'; inp.value='';
+        setTimeout(()=>err.style.display='none',2000);
+    }
+}
+
+/* ━━━━━━━━━━━━━━ LIGHTBOX ━━━━━━━━━━━━━━ */
+function closeLightbox(){
+    document.getElementById('lightbox').classList.remove('active');
+    document.getElementById('lb-media').innerHTML='';
+}
+function openLightbox(src,name,isVideo=false){
+    document.getElementById('lightbox').classList.add('active');
+    const m=document.getElementById('lb-media');
+    m.innerHTML=isVideo
+        ?`<video src="${src}" controls autoplay style="max-width:85vw;max-height:80vh;border-radius:4px;"></video>`
+        :`<img src="${src}" alt="${name}">`;
+    document.getElementById('lb-name').textContent=name||'';
+}
+
+/* ━━━━━━━━━━━━━━ SYSMON ━━━━━━━━━━━━━━ */
+let smInt=null;
+const PROCS=[
+    {n:'CORE_WATCHDOG',p:1001},{n:'ENCRYPT_SVC',p:2048},
+    {n:'NEURAL_NET',  p:3072},{n:'VAULT_DAEMON',p:4096},
+    {n:'SENTINEL',    p:5120},{n:'AUDIO_ENGINE',p:6144},
+    {n:'RENDER_SVC',  p:7168},
+];
+
+function updateSysmon(){
+    const cpu=Math.round(18+Math.random()*65);
+    const ram=Math.round(32+Math.random()*48);
+    const net=(Math.random()*9+.4).toFixed(1);
+    const dsk=Math.round(4+Math.random()*32);
+
+    function sv(id,v,unit,pct){
+        const el=document.getElementById(id);
+        if(!el) return;
+        el.innerHTML=v+`<span class="sm-unit">${unit}</span>`;
+        el.className='sm-val'+(pct>80?' dng':pct>60?' warn':'');
+        const b=document.getElementById(id+'-bar');
+        if(b) b.style.width=Math.min(100,pct)+'%';
+    }
+    sv('sm-cpu',cpu,'%',cpu);
+    sv('sm-ram',ram,'%',ram);
+    sv('sm-net',net,'MB/s',net*10);
+    sv('sm-disk',dsk,'%',dsk);
+
+    const pc=document.getElementById('sm-procs');
+    if(pc) pc.innerHTML=PROCS.map(p=>{
+        const c=(Math.random()*14).toFixed(1);
+        const m=(Math.random()*100+20).toFixed(0);
+        return `<div class="sm-pr"><span class="pname">${p.n}</span><span>${p.p}</span><span>${c}%</span><span>${m}MB</span></div>`;
+    }).join('');
+}
+
+/* ━━━━━━━━━━━━━━ MINI AI ━━━━━━━━━━━━━━ */
+let aiKey=localStorage.getItem('a404_ai_key')||'';
+let aiHist=[];
+let fbIdx=0;
+const AI_SYS=`Eres CORE_AI, la IA integrada en ARCHIVO_404, plataforma cyberpunk de datos encriptados del operador Lenin. Responde en español, sé conciso y técnico, usa terminología cyberpunk. Nunca rompas el personaje.`;
+const FB=[
+    q=>`PROCESANDO: "${q.slice(0,28)}..." — análisis offline completado. Conecta API para respuesta completa.`,
+    ()=>'CORE_AI: Banco de datos local insuficiente. Activa API KEY Anthropic arriba para IA real.',
+    ()=>'ADVERTENCIA: Modo sin conexión. Kernels neurales en standby.',
+    q=>`BÚSQUEDA LOCAL: "${q}" — datos insuficientes. API requerida.`,
+    ()=>'SISTEMA: IA real requiere API KEY. Sin ella opero en modo reducido.',
+];
+
+function setAiKey(){
+    const k=document.getElementById('ai-key-input').value.trim();
+    if(!k){ toast('Ingresa una API KEY válida','err'); return; }
+    aiKey=k; localStorage.setItem('a404_ai_key',k);
+    toast('API KEY ACTIVADA — IA REAL ONLINE');
+    addAiMsg('bot','CORE_AI ONLINE con IA real. ¿En qué te asisto, operador Lenin?');
+}
+
+function addAiMsg(role,text){
+    const c=document.getElementById('ai-msgs');
+    if(!c) return;
+    const d=document.createElement('div');
+    d.className='am '+role;
+    d.innerHTML=`<div class="am-av">${role==='usr'?'👤':'🤖'}</div><div class="am-bub">${text}</div>`;
+    c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+function showTyping(){
+    const c=document.getElementById('ai-msgs');
+    if(!c) return;
+    const d=document.createElement('div');
+    d.className='am bot'; d.id='ai-typing';
+    d.innerHTML=`<div class="am-av">🤖</div><div class="am-bub"><div class="typing"><span></span><span></span><span></span></div></div>`;
+    c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+function rmTyping(){ const t=document.getElementById('ai-typing'); if(t)t.remove(); }
+
+async function sendAi(){
+    const inp=document.getElementById('ai-usr-in');
+    const txt=inp.value.trim(); if(!txt) return;
+    inp.value=''; addAiMsg('usr',txt);
+    aiHist.push({role:'user',content:txt});
+    showTyping();
+
+    if(aiKey){
+        try{
+            const r=await fetch('https://api.anthropic.com/v1/messages',{
+                method:'POST',
+                headers:{'Content-Type':'application/json','x-api-key':aiKey,'anthropic-version':'2023-06-01'},
+                body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,system:AI_SYS,messages:aiHist})
+            });
+            const data=await r.json();
+            const reply=data.content?.[0]?.text||'ERROR: respuesta vacía.';
+            rmTyping(); addAiMsg('bot',reply);
+            aiHist.push({role:'assistant',content:reply});
+            if(aiHist.length>18) aiHist=aiHist.slice(-18);
+        }catch(e){ rmTyping(); addAiMsg('bot','ERROR DE CONEXIÓN: '+e.message); }
+    } else {
+        setTimeout(()=>{
+            rmTyping();
+            addAiMsg('bot',FB[fbIdx++%FB.length](txt));
+        },700+Math.random()*600);
+    }
+}
+
+document.getElementById('ai-usr-in').addEventListener('keydown',e=>{ if(e.key==='Enter')sendAi(); });
+
+setTimeout(()=>{
+    addAiMsg('bot','CORE_AI v4.0 INICIALIZADO. Modo offline activo. Ingresa API KEY Anthropic para IA real. ¿Cómo puedo asistirte, operador?');
+},3400);
+
+/* ━━━━━━━━━━━━━━ ENHANCED TERMINAL ━━━━━━━━━━━━━━ */
+window.addEventListener('load',()=>{
+    const inp=document.getElementById('main-input');
+    const out=document.getElementById('output-stream');
+    if(!inp||!out) return;
+
+    function tPrint(txt,cls=''){
+        const l=document.createElement('div');
+        l.className='out-line '+cls; l.innerHTML=txt;
+        out.appendChild(l); out.scrollTop=out.scrollHeight;
+    }
+
+    const EXTRA={
+        sysmon : ()=>{ openWin('w-sysmon'); tPrint('ABRIENDO MONITOR DEL SISTEMA...','sys'); },
+        ai     : ()=>{ openWin('w-ai'); tPrint('INICIANDO CORE_AI...','sys'); },
+        palette: ()=>{ openPalette(); tPrint('PALETA ACTIVADA','sys'); },
+        whoami : ()=> tPrint('OPERADOR: LENIN // NIVEL: OMEGA // ACCESO: TOTAL','ok'),
+        date   : ()=> tPrint('TIMESTAMP: '+new Date().toLocaleString(),'inf'),
+        matrix : ()=> matrixFx(),
+        scan   : ()=>{
+            tPrint('INICIANDO ESCANEO DE SECTORES...','inf');
+            let i=0;
+            const iv=setInterval(()=>{
+                tPrint(`SECTOR ${String(i).padStart(3,'0')} :: <span style="color:#00ffaa">OK</span>`);
+                if(++i>=8){ clearInterval(iv); tPrint('ESCANEO COMPLETO — 8/8 SECTORES ÍNTEGROS','ok'); }
+            },140);
+        },
+        clear2 : ()=>{ out.innerHTML=''; },
+        help2  : ()=>{
+            tPrint('═══ MÓDULOS EXTRA ═══','sys');
+            ['sysmon','ai','palette','whoami','date','matrix','scan','clear2'].forEach(c=>tPrint(`  › ${c}`));
+        },
+    };
+
+    inp.addEventListener('keydown',e=>{
+        if(e.key!=='Enter') return;
+        const val=inp.value.trim(); if(!val) return;
+        const [cmd,...rest]=val.split(' ');
+        if(EXTRA[cmd]){
+            tPrint('root@404:~$ '+val,'cmd');
+            EXTRA[cmd](rest.join(' '));
+            inp.value='';
+            e.stopPropagation();
+        }
+    },true);
+});
+
+/* Matrix FX */
+function matrixFx(){
+    const out=document.getElementById('output-stream');
+    if(!out) return;
+    const ch='アイウエカキクサシスABCDEF0123456789';
+    let n=0;
+    const iv=setInterval(()=>{
+        let row='';
+        for(let i=0;i<42;i++) row+=ch[Math.floor(Math.random()*ch.length)];
+        const l=document.createElement('div');
+        l.className='out-line';
+        l.style.cssText=`color:hsl(${138+Math.random()*28},100%,${38+Math.random()*28}%);letter-spacing:.14em`;
+        l.textContent=row;
+        out.appendChild(l); out.scrollTop=out.scrollHeight;
+        if(++n>=22) clearInterval(iv);
+    },75);
+}
+
+/* ━━━━━━━━━━━━━━ AUDIO VISUALIZER ━━━━━━━━━━━━━━ */
+(()=>{
+    const player=document.getElementById('audio-player');
+    const vis=document.getElementById('vis-bars');
+    if(!player||!vis) return;
+    player.addEventListener('play', ()=>vis.classList.add('on'));
+    player.addEventListener('pause',()=>vis.classList.remove('on'));
+    player.addEventListener('ended',()=>vis.classList.remove('on'));
+})();
+
+/* ━━━━━━━━━━━━━━ DRAG & DROP ZONES ━━━━━━━━━━━━━━ */
+document.querySelectorAll('.dz').forEach(z=>{
+    z.addEventListener('dragover', e=>{ e.preventDefault(); z.classList.add('drag-over'); });
+    z.addEventListener('dragleave',()=>z.classList.remove('drag-over'));
+    z.addEventListener('drop',e=>{
+        e.preventDefault(); z.classList.remove('drag-over');
+        const file=e.dataTransfer.files[0];
+        if(file) z.dispatchEvent(new CustomEvent('dropfile',{detail:{file,zone:z}}));
+    });
+});
+
+/* ━━━━━━━━━━━━━━ PANIC COMPAT ━━━━━━━━━━━━━━ */
+if(typeof panicAbort==='undefined'){
+    window.panicAbort=function(){
+        const p=document.getElementById('panic');
+        p.style.display='flex';
+        setTimeout(()=>{ p.style.display='none'; toast('PROTOCOLO ABORTADO','warn'); },3000);
+    };
+}
+if(typeof toggleSentinel==='undefined'){
+    let sOn=false;
+    window.toggleSentinel=function(){
+        sOn=!sOn;
+        document.querySelector('.sentinel-icon').classList.toggle('sent-active',sOn);
+        toast(sOn?'CENTINELA ACTIVADO':'CENTINELA DESACTIVADO');
+    };
+}
+
+console.log('%cARCHIVO_404 v4.0 — ENHANCED CORE CARGADO',
+    'color:#ff003c;font-family:monospace;font-weight:bold;font-size:13px');
+</script>
 </body>
 </html>

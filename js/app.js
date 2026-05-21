@@ -469,31 +469,65 @@ function renderVault() {
 
 // ─── GALERÍA ─────────────────────────────────────────────────
 function toggleGalleryEncrypted() {
+
+    const btn = document.getElementById('gallery-enc-btn');
+
+    if (!btn) {
+        console.error('No existe gallery-enc-btn');
+        return;
+    }
+
     if (!galleryShowEnc) {
-        requireKey(()=>{
+
+        requireKey(() => {
+
             galleryShowEnc = true;
-            document.getElementById('gallery-enc-btn').classList.add('active');
-            document.getElementById('gallery-enc-btn').textContent = '🔓 CIFRADOS';
+
+            btn.classList.add('active');
+            btn.textContent = '🔓 CIFRADOS';
+
             renderGallery();
+
             log('[OK] ACCESO A GALERÍA CIFRADA CONCEDIDO.', 'ok');
         });
+
     } else {
+
         galleryShowEnc = false;
-        document.getElementById('gallery-enc-btn').classList.remove('active');
-        document.getElementById('gallery-enc-btn').textContent = '🔒 CIFRADOS';
+
+        btn.classList.remove('active');
+        btn.textContent = '🔒 CIFRADOS';
+
         renderGallery();
     }
 }
 
 function renderGallery() {
-    renderGallerySection('gallery-photos', meta.imgs, 'img');
-    renderGallerySection('gallery-videos', meta.vids, 'vid');
+
+    console.log('META:', meta);
+    console.log('IMGS:', meta?.imgs);
+    console.log('VIDS:', meta?.vids);
+
+    renderGallerySection('gallery-photos', meta?.imgs || {}, 'img');
+    renderGallerySection('gallery-videos', meta?.vids || {}, 'vid');
 }
 
 function renderGallerySection(gridId, items, type) {
+
     const grid = document.getElementById(gridId);
-    if (!grid) return;
+
+    if (!grid) {
+        console.error('No existe el grid:', gridId);
+        return;
+    }
+
     grid.innerHTML = '';
+
+    if (!items || typeof items !== 'object') {
+        grid.innerHTML = `<p class="gallery-empty">ERROR DE DATOS</p>`;
+        return;
+    }
+
     const keys = Object.keys(items);
 
     if (keys.length === 0) {
@@ -502,55 +536,83 @@ function renderGallerySection(gridId, items, type) {
     }
 
     keys.forEach(name => {
+
         const item = items[name];
+
+        if (!item) return;
+
         if (item.enc && !galleryShowEnc) return;
 
         const thumb = document.createElement('div');
-        thumb.className = 'gallery-thumb' + (item.enc ? ' enc-thumb' : '');
 
-        // Preview
+        thumb.className =
+            'gallery-thumb' + (item.enc ? ' enc-thumb' : '');
+
+        // ───── PREVIEW ─────
+
         if (type === 'img') {
+
             const img = document.createElement('img');
-            img.src = item.url;
+
+            img.src = item.url || '';
+
             img.alt = name;
+
             img.loading = 'lazy';
+
+            img.onerror = () => {
+                console.error('Imagen rota:', item.url);
+
+                img.src =
+                    'https://via.placeholder.com/300x200?text=ERROR';
+            };
+
             thumb.appendChild(img);
+
         } else {
+
             const vid = document.createElement('video');
-            vid.src = item.url;
+
+            vid.src = item.url || '';
+
             vid.muted = true;
+
             vid.preload = 'metadata';
-            vid.addEventListener('loadedmetadata', () => { vid.currentTime = 1; });
+
+            vid.onerror = () => {
+                console.error('Video roto:', item.url);
+            };
+
+            vid.addEventListener('loadedmetadata', () => {
+                vid.currentTime = 1;
+            });
+
             thumb.appendChild(vid);
         }
 
-        // Label
+        // ───── LABEL ─────
+
         const lbl = document.createElement('div');
+
         lbl.className = 'thumb-label';
-        lbl.textContent = name + (item.enc ? ' 🔒' : '');
+
+        lbl.textContent =
+            name + (item.enc ? ' 🔒' : '');
+
         thumb.appendChild(lbl);
 
-        // Botón eliminar
-        const del = document.createElement('div');
-        del.className = 'thumb-del';
-        del.textContent = '×';
-        del.onclick = async (e) => {
-            e.stopPropagation();
-            delete items[name];
-            if (fbModule) await fbModule.fsDelete(type+'s', name).catch(()=>{});
-            if (item.storagePath) await fbModule?.storageDelete(item.storagePath).catch(()=>{});
-            await idbDel(`${type}_${name}`);
-            saveMeta();
-            renderGallery();
-            log(`"${name}" ELIMINADO.`, 'cmd');
-        };
-        thumb.appendChild(del);
+        // ───── ABRIR LIGHTBOX ─────
 
-        // Click para abrir lightbox
         thumb.onclick = () => {
+
             if (item.enc && !galleryShowEnc) {
-                requireKey(() => openLightbox(item, name, type));
+
+                requireKey(() => {
+                    openLightbox(item, name, type);
+                });
+
             } else {
+
                 openLightbox(item, name, type);
             }
         };
@@ -558,7 +620,6 @@ function renderGallerySection(gridId, items, type) {
         grid.appendChild(thumb);
     });
 }
-
 // ─── LIGHTBOX ────────────────────────────────────────────────
 function openLightbox(item, name, type) {
     const lb = document.getElementById('lightbox');

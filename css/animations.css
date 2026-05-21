@@ -1,255 +1,194 @@
-/* ═════════════════════════════════════════════════════════════════════════
-   ARCHIVO 404 — ANIMATIONS & KINETICS v3.5
-   PROPIETARIO: LENIN // ACCESO: ROOT
-   MOTOR: QUANTUM RENDER
-   ═════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   ARCHIVO 404 — ANIMATIONS v4.0
+   Todas las animaciones y keyframes del sistema
+   ═══════════════════════════════════════════════════════════ */
 
-/* ── INTERFAZ BASE (FADES & SLIDES) ── */
+/* ─── BOOT ─────────────────────────────────────────── */
+@keyframes bootPulse {
+    from { opacity:0.8; text-shadow:0 0 20px rgba(255,0,60,0.3); }
+    to   { opacity:1;   text-shadow:0 0 60px rgba(255,0,60,0.7), 0 0 120px rgba(255,0,60,0.2); }
+}
+
+/* ─── FADE / SLIDE / SCALE ──────────────────────────── */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); filter: blur(4px); }
-    to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+    from { opacity:0; }
+    to   { opacity:1; }
 }
-
-@keyframes fadeOut {
-    from { opacity: 1; transform: translateY(0); filter: blur(0); }
-    to   { opacity: 0; transform: translateY(-10px); filter: blur(4px); }
-}
-
-/* ── DINÁMICA DE VENTANAS (MATERIALIZACIÓN HOLOGRÁFICA) ── */
-@keyframes winOpen {
-    0%   { opacity: 0; transform: scale(0.9) translateY(20px) perspective(500px) rotateX(10deg); filter: blur(10px); }
-    60%  { opacity: 1; transform: scale(1.02) translateY(-5px) perspective(500px) rotateX(-2deg); filter: blur(0); }
-    100% { opacity: 1; transform: scale(1) translateY(0) perspective(500px) rotateX(0deg); }
-}
-
-/* ── VISOR LIGHTBOX Y MODALES ── */
-@keyframes scaleIn {
-    0%   { opacity: 0; transform: scale(0.85); border-radius: 50%; }
-    70%  { opacity: 1; transform: scale(1.02); border-radius: 5px; }
-    100% { opacity: 1; transform: scale(1); border-radius: 0; }
-}
-
 @keyframes slideIn {
-    0%   { opacity: 0; transform: translateY(-30px) scaleY(0.5); border-top: 2px solid var(--accent); }
-    100% { opacity: 1; transform: translateY(0) scaleY(1); border-top: 1px solid var(--accent); }
+    from { transform:translateY(-18px); opacity:0; }
+    to   { transform:translateY(0);     opacity:1; }
+}
+@keyframes scaleIn {
+    from { transform:scale(0.88); opacity:0; }
+    to   { transform:scale(1);    opacity:1; }
+}
+@keyframes fadeSlide {
+    from { opacity:0; transform:translateY(5px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@keyframes slideUp {
+    from { transform:translateY(12px); opacity:0; }
+    to   { transform:translateY(0);    opacity:1; }
+}
+@keyframes slideRight {
+    from { transform:translateX(-12px); opacity:0; }
+    to   { transform:translateX(0);     opacity:1; }
 }
 
-/* ── PROTOCOLOS DE FALLO (GLITCH TEXT & BOX) ── */
-.glitch-text {
-    position: relative;
-    animation: glitch-core 2s infinite linear alternate-reverse;
+/* ─── WINDOWS ───────────────────────────────────────── */
+@keyframes winOpen {
+    from { transform:scale(0.9) translateY(10px); opacity:0; }
+    to   { transform:scale(1)   translateY(0);    opacity:1; }
+}
+@keyframes winClose {
+    from { transform:scale(1)    translateY(0);   opacity:1; }
+    to   { transform:scale(0.92) translateY(8px); opacity:0; }
 }
 
-.glitch-text::before, .glitch-text::after {
-    content: attr(data-text);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
+/* ─── GLITCH EFFECT ─────────────────────────────────── */
+@keyframes glitchMain {
+    0%,100% { transform:translate(0,0); }
+    20%     { transform:translate(-2px,1px); }
+    40%     { transform:translate(2px,-1px); }
+    60%     { transform:translate(-1px,2px); }
+    80%     { transform:translate(1px,-2px); }
+}
+@keyframes glitchA {
+    0%,100% { transform:translate(0,0); clip-path:polygon(0 0,100% 0,100% 33%,0 33%); }
+    25%     { transform:translate(3px,-1px); }
+    75%     { transform:translate(-3px,1px); }
+}
+@keyframes glitchB {
+    0%,100% { transform:translate(0,0); clip-path:polygon(0 67%,100% 67%,100% 100%,0 100%); }
+    25%     { transform:translate(-3px,2px); }
+    75%     { transform:translate(3px,-2px); }
+}
+@keyframes glitchFlicker {
+    0%,97%,100% { opacity:1; }
+    98%         { opacity:0; }
+    99%         { opacity:1; }
 }
 
-.glitch-text::before {
-    left: 2px;
-    text-shadow: -2px 0 #00ff88;
-    clip-path: inset(24% 0 58% 0);
-    animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+/* ─── TOAST ─────────────────────────────────────────── */
+@keyframes toastIn {
+    from { transform:translateX(110%); opacity:0; }
+    to   { transform:translateX(0);    opacity:1; }
+}
+@keyframes toastOut {
+    from { transform:translateX(0);   opacity:1; }
+    to   { transform:translateX(110%);opacity:0; }
 }
 
-.glitch-text::after {
-    left: -2px;
-    text-shadow: -2px 0 var(--accent);
-    clip-path: inset(54% 0 7% 0);
-    animation: glitch-anim-2 3s infinite linear alternate-reverse;
+/* ─── COMMAND PALETTE ───────────────────────────────── */
+@keyframes paletteOpen {
+    from { transform:translateX(-50%) scale(0.94); opacity:0; }
+    to   { transform:translateX(-50%) scale(1);    opacity:1; }
 }
 
-@keyframes glitch-core {
-    0%   { text-shadow: 2px 0 var(--accent), -2px 0 var(--blue); transform: translate(0); }
-    10%  { text-shadow: -2px 0 var(--accent), 2px 0 var(--blue); transform: translate(-2px, 1px); }
-    20%  { text-shadow: 2px 0 var(--accent), -2px 0 var(--blue); transform: translate(2px, -1px); }
-    30%  { text-shadow: 2px 2px var(--accent), -2px -2px var(--blue); clip-path: inset(30% 0 40% 0); }
-    40%  { text-shadow: -2px -2px var(--accent), 2px 2px var(--blue); clip-path: inset(60% 0 10% 0); }
-    50%  { text-shadow: 2px -2px var(--accent), -2px 2px var(--blue); clip-path: inset(20% 0 50% 0); }
-    60%  { text-shadow: none; clip-path: none; transform: translate(0); }
-    100% { text-shadow: none; clip-path: none; }
+/* ─── TICKER ─────────────────────────────────────────── */
+@keyframes tickerMove {
+    from { transform:translateX(70vw); }
+    to   { transform:translateX(-100%); }
 }
 
-@keyframes glitch-anim-1 {
-    0%   { clip-path: inset(20% 0 80% 0); }
-    20%  { clip-path: inset(60% 0 10% 0); }
-    40%  { clip-path: inset(40% 0 50% 0); }
-    60%  { clip-path: inset(80% 0 5% 0); }
-    80%  { clip-path: inset(10% 0 70% 0); }
-    100% { clip-path: inset(30% 0 20% 0); }
+/* ─── SCANLINES ─────────────────────────────────────── */
+@keyframes scanScroll {
+    from { background-position:0 0; }
+    to   { background-position:0 120px; }
 }
 
-@keyframes glitch-anim-2 {
-    0%   { clip-path: inset(10% 0 60% 0); }
-    20%  { clip-path: inset(30% 0 20% 0); }
-    40%  { clip-path: inset(70% 0 10% 0); }
-    60%  { clip-path: inset(20% 0 50% 0); }
-    80%  { clip-path: inset(50% 0 30% 0); }
-    100% { clip-path: inset(5% 0 80% 0); }
+/* ─── AUDIO EQ BARS ─────────────────────────────────── */
+@keyframes eqPulse {
+    from { height:3px;  opacity:0.4; background:var(--accent); }
+    to   { height:18px; opacity:1;   background:var(--accent2); }
+}
+@keyframes eqBeat {
+    0%,100% { transform:scaleY(0.3); }
+    50%     { transform:scaleY(1);   }
 }
 
-/* ── ENTORNO CRT (MONITOR VIEJO & SCANLINES) ── */
-@keyframes scanPulse {
-    0%   { opacity: 0.02; transform: translateY(0); }
-    50%  { opacity: 0.08; transform: translateY(5px); }
-    100% { opacity: 0.02; transform: translateY(0); }
+/* ─── CURSOR / UI ───────────────────────────────────── */
+@keyframes cursorPulse {
+    from { box-shadow:0 0 8px rgba(255,0,60,0.4); }
+    to   { box-shadow:0 0 22px rgba(255,0,60,0.8), 0 0 40px rgba(255,0,60,0.2); }
 }
 
-body::after {
-    content: '';
-    position: fixed; 
-    inset: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(0,0,0,0.15),
-        rgba(0,0,0,0.15) 1px,
-        transparent 1px,
-        transparent 3px
-    );
-    pointer-events: none; 
-    z-index: 99997;
-    animation: scanPulse 6s ease-in-out infinite;
-    /* Añade aberración cromática en los bordes de la pantalla */
-    box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+/* ─── SENTINEL ──────────────────────────────────────── */
+@keyframes sentinelPulse {
+    0%,100% { filter:drop-shadow(0 0 0 transparent); color:#00ff88; }
+    50%     { filter:drop-shadow(0 0 8px #00ff88);   color:#00ff88; }
 }
 
-/* ── PULSOS DE ESTADO Y SUBIDA DE DATOS ── */
+/* ─── UPLOAD / PROGRESS ─────────────────────────────── */
 @keyframes uploadPulse {
-    0%   { border-color: var(--border-mid); box-shadow: inset 0 0 0 transparent; }
-    50%  { border-color: var(--accent); box-shadow: inset 0 0 20px var(--accent-dim), 0 0 15px var(--accent-glow); transform: scale(1.01); }
-    100% { border-color: var(--border-mid); box-shadow: inset 0 0 0 transparent; }
+    from { border-color:rgba(255,0,60,0.3); }
+    to   { border-color:rgba(255,0,60,0.9); box-shadow:0 0 14px rgba(255,0,60,0.15); }
+}
+@keyframes progressShimmer {
+    from { background-position:-200px 0; }
+    to   { background-position:200px 0; }
 }
 
-.upload-sector.uploading {
-    animation: uploadPulse 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    border-left: 3px solid var(--accent);
+/* ─── AI TYPING DOTS ────────────────────────────────── */
+@keyframes typingDot {
+    0%,100% { opacity:0.25; transform:translateY(0); }
+    50%     { opacity:1;    transform:translateY(-4px); }
 }
 
-@keyframes sentinelBlink {
-    0%   { color: var(--green); text-shadow: 0 0 10px var(--green); transform: scale(1); }
-    50%  { color: #004422; text-shadow: none; transform: scale(0.85); }
-    100% { color: var(--green); text-shadow: 0 0 10px var(--green); transform: scale(1); }
+/* ─── SIDEBAR HOVER ─────────────────────────────────── */
+@keyframes sideGlow {
+    from { box-shadow:inset 2px 0 0 var(--accent), 0 0 0 transparent; }
+    to   { box-shadow:inset 2px 0 0 var(--accent), 4px 0 16px rgba(255,0,60,0.2); }
 }
 
-.sentinel-active .sentinel-icon {
-    animation: sentinelBlink 1.5s ease-in-out infinite;
+/* ─── MATRIX / PARTICLES ────────────────────────────── */
+@keyframes matrixDrop {
+    from { transform:translateY(-20px); opacity:0; }
+    to   { transform:translateY(0);     opacity:1; }
+}
+@keyframes particleFade {
+    from { opacity:0.6; transform:scale(1); }
+    to   { opacity:0;   transform:scale(0.5) translateY(-20px); }
 }
 
-@keyframes badgePulse {
-    0%   { box-shadow: 0 0 5px var(--accent-dim); background: rgba(255,0,60,0.05); }
-    50%  { box-shadow: 0 0 20px var(--accent-glow); background: rgba(255,0,60,0.2); border-color: #ff3366; }
-    100% { box-shadow: 0 0 5px var(--accent-dim); background: rgba(255,0,60,0.05); }
+/* ─── SYSMON BARS ───────────────────────────────────── */
+@keyframes barFill {
+    from { width:0%; }
+}
+@keyframes barPulse {
+    from { opacity:0.8; }
+    to   { opacity:1; filter:brightness(1.15); }
 }
 
-.status-badge { 
-    animation: badgePulse 2.5s ease-in-out infinite; 
+/* ─── CARD HOVER ────────────────────────────────────── */
+@keyframes cardAppear {
+    from { transform:translateY(8px) scale(0.96); opacity:0; }
+    to   { transform:translateY(0)   scale(1);    opacity:1; }
 }
 
-/* ── BOOT SCREEN LOGO FLICKER (ENCENDIDO DE NEÓN) ── */
-@keyframes flicker {
-    0%   { opacity: 1; text-shadow: 0 0 40px var(--accent-glow), 0 0 10px #fff; }
-    2%   { opacity: 0.4; text-shadow: none; }
-    4%   { opacity: 1; text-shadow: 0 0 40px var(--accent-glow), 0 0 10px #fff; }
-    19%  { opacity: 1; text-shadow: 0 0 40px var(--accent-glow); }
-    21%  { opacity: 0.1; text-shadow: none; }
-    23%  { opacity: 1; text-shadow: 0 0 40px var(--accent-glow); }
-    25%  { opacity: 0.5; }
-    26%  { opacity: 1; text-shadow: 0 0 50px var(--accent), 0 0 20px var(--accent); }
-    54%  { opacity: 1; text-shadow: 0 0 40px var(--accent-glow); }
-    56%  { opacity: 0.3; text-shadow: none; }
-    58%  { opacity: 1; text-shadow: 0 0 40px var(--accent-glow); }
-    100% { opacity: 1; text-shadow: 0 0 40px var(--accent-glow); }
+/* ─── BOOT LOG LINES ────────────────────────────────── */
+@keyframes logLine {
+    from { opacity:0; transform:translateX(-6px); }
+    to   { opacity:1; transform:translateX(0); }
 }
 
-.boot-logo { 
-    animation: flicker 4s linear infinite; 
+/* ─── TITLE GLITCH SUBTLE ───────────────────────────── */
+@keyframes titleFlicker {
+    0%,94%,100% { opacity:1; }
+    95%         { opacity:0.85; transform:translateX(-1px); }
+    97%         { opacity:1;   transform:translateX(1px); }
+    98%         { opacity:0.9; transform:translateX(0); }
 }
 
-/* ── AUDIO EQUALIZER (FRECUENCIAS) ── */
-@keyframes eq1 { 0%, 100% { height: 4px; } 50% { height: 14px; } }
-@keyframes eq2 { 0%, 100% { height: 8px; } 50% { height: 4px; }  }
-@keyframes eq3 { 0%, 100% { height: 6px; } 50% { height: 16px; } }
-@keyframes eq4 { 0%, 100% { height: 10px;} 50% { height: 6px; }  }
-@keyframes eq5 { 0%, 100% { height: 5px; } 50% { height: 12px; } }
-
-.eq-bars { 
-    display: inline-flex; align-items: flex-end; gap: 3px; 
-    height: 16px; margin-left: 10px; vertical-align: middle; 
-}
-.eq-bar { 
-    width: 3px; background: var(--accent); border-radius: 1px; 
-    box-shadow: 0 0 5px var(--accent);
-}
-.eq-bar:nth-child(1) { animation: eq1 0.5s ease-in-out infinite; }
-.eq-bar:nth-child(2) { animation: eq2 0.4s ease-in-out infinite; }
-.eq-bar:nth-child(3) { animation: eq3 0.6s ease-in-out infinite; }
-.eq-bar:nth-child(4) { animation: eq4 0.45s ease-in-out infinite; }
-.eq-bar:nth-child(5) { animation: eq5 0.55s ease-in-out infinite; }
-
-/* ── EFECTOS DE TARJETAS Y GALERÍA ── */
-.gallery-thumb::before {
-    content: ''; position: absolute; inset: 0;
-    border: 1px solid transparent; transition: all 0.3s ease;
-    z-index: 2; pointer-events: none;
+/* ─── WINDOW MINIMIZE ───────────────────────────────── */
+@keyframes winMinimize {
+    from { max-height:500px; opacity:1; }
+    to   { max-height:0;     opacity:0; }
 }
 
-.gallery-thumb:hover::before {
-    border-color: var(--accent);
-    box-shadow: inset 0 0 15px rgba(255,0,60,0.3);
+/* ─── ONLINE STATUS PULSE ───────────────────────────── */
+@keyframes statusPulse {
+    0%,100% { text-shadow:0 0 4px var(--green); }
+    50%     { text-shadow:0 0 12px var(--green), 0 0 24px rgba(0,255,136,0.3); }
 }
-
-.gallery-thumb:hover::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,0,60,0.15) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 1;
-    animation: fadeIn 0.3s ease;
-}
-
-/* ── FLUJO DE DATOS (PROGRESS BAR SHIMMER) ── */
-@keyframes shimmer {
-    0%   { background-position: -200px 0; }
-    100% { background-position: 200px 0; }
-}
-
-.prog-bar {
-    background: linear-gradient(90deg, 
-        var(--accent) 0%, 
-        #ff6680 25%, 
-        #ffffff 50%, 
-        #ff6680 75%, 
-        var(--accent) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s linear infinite;
-    position: relative;
-}
-
-.prog-bar::after {
-    content: ''; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-    background: repeating-linear-gradient(
-        45deg,
-        transparent, transparent 5px,
-        rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 10px
-    );
-}
-
-/* ── ANIMACIONES EXTRAS PARA TERMINAL E IA ── */
-@keyframes blinkCursor {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-}
-
-.cursor-blink {
-    display: inline-block;
-    width: 8px; height: 15px;
-    background-color: var(--accent);
-    vertical-align: middle;
-    animation: blinkCursor 1s step-end infinite;
-}
+.status-online { animation:statusPulse 2.5s ease infinite; }

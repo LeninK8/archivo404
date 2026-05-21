@@ -110,10 +110,16 @@ async function boot() {
     }
 
     await sleep(300);
-    document.getElementById('boot-screen').style.transition = 'opacity 0.5s';
-    document.getElementById('boot-screen').style.opacity = '0';
-    setTimeout(()=>{ document.getElementById('boot-screen').style.display='none'; }, 500);
+    const bootScreen = document.getElementById('boot-screen');
 
+if (bootScreen) {
+    bootScreen.style.transition = 'opacity 0.5s';
+    bootScreen.style.opacity = '0';
+
+    setTimeout(() => {
+        bootScreen.style.display = 'none';
+    }, 500);
+}
     initApp();
 }
 

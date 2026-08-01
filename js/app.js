@@ -1,20 +1,22 @@
 // ════════════════════════════════════════════════════════════
 //  ARCHIVO 404 — CHAT · Lógica principal
+//  Firestore: usuarios, chats, mensajes, estados, perfiles.
+//  Cloudinary: TODO el almacenamiento de archivos multimedia.
+//  (Firebase Storage fue eliminado por completo del proyecto.)
 // ════════════════════════════════════════════════════════════
 import {
-  auth, db, storage,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged,
-  signOut, updateProfile, doc, setDoc, getDoc, updateDoc, collection,
+  db, doc, setDoc, getDoc, updateDoc, collection,
   query, orderBy, onSnapshot, serverTimestamp, addDoc, limit,
-  ref, uploadBytesResumable, getDownloadURL,
-  apodoToEmail, chatIdFor
+  apodoToUid, chatIdFor, hashPassword
 } from './firebase.js';
+import { uploadToCloudinary } from './cloudinary.js';
+
+const SESSION_KEY = 'a404_session';
 
 // ─────────────────────────────────────────────
 // ESTADO GLOBAL
 // ─────────────────────────────────────────────
-let currentUser = null;
-let myProfile = null;
+let me = null;                    // {uid, nombre, apodo, fotoURL, createdAt, lastSeen}
 let allUsers = {};                // uid -> profile
 let usersUnsub = null;
 let messagesUnsub = null;
@@ -31,7 +33,7 @@ let msgById = {};
 // ─────────────────────────────────────────────
 const BOOT_LINES = [
   "INICIALIZANDO ARCHIVO_404 CHAT...",
-  "CONECTANDO A FIREBASE...",
+  "CONECTANDO A FIRESTORE...",
   "VERIFICANDO SESIÓN...",
   "LISTO."
 ];
@@ -41,18 +43,37 @@ async function boot(){
     const d=document.createElement('div');d.className=i===BOOT_LINES.length-1?'ok':'';
     d.textContent='> '+BOOT_LINES[i];log.appendChild(d);
     bar.style.width=((i+1)/BOOT_LINES.length*100)+'%';
-    await sleep(180);
+    await sleep(160);
   }
-  await sleep(200);
+  await sleep(150);
   const bs=document.getElementById('boot');
   bs.style.transition='opacity .4s';bs.style.opacity='0';
   setTimeout(()=>bs.style.display='none',400);
+  await tryRestoreSession();
 }
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 boot();
 
 // ─────────────────────────────────────────────
-// AUTH — UI
+// SESIÓN (localStorage, por dispositivo)
+// ─────────────────────────────────────────────
+async function tryRestoreSession(){
+  const uid = localStorage.getItem(SESSION_KEY);
+  if(!uid) return showAuthScreen();
+  try{
+    const snap = await getDoc(doc(db,'users',uid));
+    if(!snap.exists()){ localStorage.removeItem(SESSION_KEY); return showAuthScreen(); }
+    me = snap.data();
+    startApp();
+  }catch(e){ showAuthScreen(); }
+}
+function showAuthScreen(){
+  document.getElementById('screen-app').classList.add('hidden');
+  document.getElementById('screen-auth').classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────────
+// AUTH — UI (tabs)
 // ─────────────────────────────────────────────
 function switchAuthTab(tab){
   document.getElementById('tab-login').classList.toggle('act', tab==='login');
@@ -72,16 +93,9 @@ function previewRegAvatar(input){
   document.getElementById('reg-avatar-icon').classList.add('hidden');
 }
 
-function authErrorMsg(e){
-  const c = e.code || '';
-  if(c.includes('email-already-in-use')) return 'Ese apodo ya está registrado. Elige otro o inicia sesión.';
-  if(c.includes('weak-password')) return 'La contraseña debe tener al menos 6 caracteres.';
-  if(c.includes('user-not-found') || c.includes('invalid-credential') || c.includes('wrong-password')) return 'Apodo o contraseña incorrectos.';
-  if(c.includes('invalid-email')) return 'Apodo inválido. Usa solo letras, números, ., _ o -.';
-  if(c.includes('too-many-requests')) return 'Demasiados intentos. Espera un momento.';
-  return e.message || 'Ocurrió un error. Intenta de nuevo.';
-}
-
+// ─────────────────────────────────────────────
+// REGISTRO
+// ─────────────────────────────────────────────
 async function doRegister(){
   const nombre = document.getElementById('reg-nombre').value.trim();
   const apodo  = document.getElementById('reg-apodo').value.trim();
@@ -93,86 +107,89 @@ async function doRegister(){
   if(pass.length<6){ errEl.textContent='La contraseña debe tener mínimo 6 caracteres.'; return; }
   if(pass!==pass2){ errEl.textContent='Las contraseñas no coinciden.'; return; }
 
+  let uid;
+  try{ uid = apodoToUid(apodo); }catch(e){ errEl.textContent = e.message; return; }
+
   try{
-    const email = apodoToEmail(apodo);
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    const existing = await getDoc(doc(db,'users',uid));
+    if(existing.exists()){ errEl.textContent = 'Ese apodo ya está registrado. Elige otro o inicia sesión.'; return; }
+
     let fotoURL = '';
     if(regPhotoFile){
-      fotoURL = await uploadToStorage(`users/${cred.user.uid}/avatar_${Date.now()}`, regPhotoFile);
+      fotoURL = await uploadToCloudinary(regPhotoFile);
     }
-    await updateProfile(cred.user, { displayName: nombre, photoURL: fotoURL || null });
-    await setDoc(doc(db,'users',cred.user.uid), {
-      uid: cred.user.uid, nombre, apodo, apodoLower: apodo.toLowerCase(),
-      fotoURL: fotoURL || '', createdAt: Date.now(), lastSeen: Date.now()
-    });
+    const passHash = await hashPassword(pass);
+
+    const profile = {
+      uid, nombre, apodo, apodoLower: uid,
+      passHash, fotoURL: fotoURL || '', createdAt: Date.now(), lastSeen: Date.now()
+    };
+    await setDoc(doc(db,'users',uid), profile);
+    me = profile;
+    localStorage.setItem(SESSION_KEY, uid);
     toast('Cuenta creada. ¡Bienvenido, '+nombre+'!','ok');
-  }catch(e){ errEl.textContent = authErrorMsg(e); }
+    startApp();
+  }catch(e){ errEl.textContent = 'Error: '+e.message; }
 }
 
+// ─────────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────────
 async function doLogin(){
   const apodo = document.getElementById('login-apodo').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-err'); errEl.textContent='';
   if(!apodo || !pass){ errEl.textContent='Ingresa tu apodo y contraseña.'; return; }
+
+  let uid;
+  try{ uid = apodoToUid(apodo); }catch(e){ errEl.textContent = e.message; return; }
+
   try{
-    const email = apodoToEmail(apodo);
-    await signInWithEmailAndPassword(auth, email, pass);
-  }catch(e){ errEl.textContent = authErrorMsg(e); }
+    const snap = await getDoc(doc(db,'users',uid));
+    if(!snap.exists()){ errEl.textContent = 'Apodo o contraseña incorrectos.'; return; }
+    const profile = snap.data();
+    const hash = await hashPassword(pass);
+    if(hash !== profile.passHash){ errEl.textContent = 'Apodo o contraseña incorrectos.'; return; }
+    me = profile;
+    localStorage.setItem(SESSION_KEY, uid);
+    startApp();
+  }catch(e){ errEl.textContent = 'Error: '+e.message; }
 }
 
 async function doLogout(){
-  try{ if(currentUser) await updateDoc(doc(db,'users',currentUser.uid), { lastSeen: Date.now(), online:false }); }catch(e){}
+  try{ if(me) await updateDoc(doc(db,'users',me.uid), { lastSeen: Date.now(), online:false }); }catch(e){}
   clearInterval(presenceInterval); clearInterval(statusRefreshInterval);
   if(usersUnsub) usersUnsub();
   if(messagesUnsub) messagesUnsub();
-  await signOut(auth);
+  localStorage.removeItem(SESSION_KEY);
+  me = null; activeChatUid = null; activeChatId = null;
+  document.body.classList.remove('chat-open');
+  showAuthScreen();
 }
 
 // ─────────────────────────────────────────────
-// AUTH — ESTADO
+// ARRANQUE DE LA APP (post login/registro)
 // ─────────────────────────────────────────────
-onAuthStateChanged(auth, async (user)=>{
-  if(user){
-    currentUser = user;
-    let snap = await getDoc(doc(db,'users',user.uid));
-    if(!snap.exists()){
-      // fallback por si el doc no se creó (no debería pasar)
-      await setDoc(doc(db,'users',user.uid), {
-        uid:user.uid, nombre:user.displayName||'Operador', apodo:user.email.split('@')[0],
-        apodoLower:(user.email.split('@')[0]).toLowerCase(), fotoURL:user.photoURL||'', createdAt:Date.now(), lastSeen:Date.now()
-      });
-      snap = await getDoc(doc(db,'users',user.uid));
-    }
-    myProfile = snap.data();
-    showApp();
-    setupPresence();
-    listenUsers();
-  } else {
-    currentUser = null; myProfile = null; activeChatUid = null; activeChatId = null;
-    document.getElementById('screen-app').classList.add('hidden');
-    document.getElementById('screen-auth').classList.remove('hidden');
-    document.body.classList.remove('chat-open');
-  }
-});
-
-function showApp(){
+function startApp(){
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.remove('hidden');
-  document.getElementById('me-name').textContent = myProfile.nombre;
-  document.getElementById('me-apodo').textContent = '@'+myProfile.apodo;
-  document.getElementById('me-avatar').src = avatarSrc(myProfile);
+  document.getElementById('me-name').textContent = me.nombre;
+  document.getElementById('me-apodo').textContent = '@'+me.apodo;
+  document.getElementById('me-avatar').src = avatarSrc(me);
+  setupPresence();
+  listenUsers();
 }
 
 function setupPresence(){
-  updateDoc(doc(db,'users',currentUser.uid), { lastSeen: Date.now(), online:true }).catch(()=>{});
+  updateDoc(doc(db,'users',me.uid), { lastSeen: Date.now(), online:true }).catch(()=>{});
   presenceInterval = setInterval(()=>{
-    if(document.visibilityState==='visible' && currentUser){
-      updateDoc(doc(db,'users',currentUser.uid), { lastSeen: Date.now(), online:true }).catch(()=>{});
+    if(document.visibilityState==='visible' && me){
+      updateDoc(doc(db,'users',me.uid), { lastSeen: Date.now(), online:true }).catch(()=>{});
     }
   }, 15000);
   statusRefreshInterval = setInterval(()=>{ renderContacts(); updateActiveChatHeader(); }, 10000);
   window.addEventListener('beforeunload', ()=>{
-    try{ updateDoc(doc(db,'users',currentUser.uid), { lastSeen: Date.now(), online:false }); }catch(e){}
+    try{ updateDoc(doc(db,'users',me.uid), { lastSeen: Date.now(), online:false }); }catch(e){}
   });
 }
 
@@ -186,7 +203,6 @@ function listenUsers(){
     snap.forEach(d=>{ allUsers[d.id]=d.data(); });
     renderContacts();
     updateActiveChatHeader();
-    if(activeChatUid) { /* profile modal live update handled on open */ }
   });
 }
 
@@ -213,7 +229,7 @@ function renderContacts(){
   if(!list) return;
   list.innerHTML='';
   const others = Object.values(allUsers)
-    .filter(u=>u.uid!==currentUser?.uid)
+    .filter(u=>u.uid!==me?.uid)
     .filter(u=> (u.nombre||'').toLowerCase().includes(q) || (u.apodo||'').toLowerCase().includes(q))
     .sort((a,b)=> (isOnline(b.lastSeen)-isOnline(a.lastSeen)) || (a.nombre||'').localeCompare(b.nombre||''));
 
@@ -241,7 +257,7 @@ function renderContacts(){
 // ─────────────────────────────────────────────
 function openChatWith(uid){
   activeChatUid = uid;
-  activeChatId = chatIdFor(currentUser.uid, uid);
+  activeChatId = chatIdFor(me.uid, uid);
   document.getElementById('chat-empty').classList.add('hidden');
   document.getElementById('chat-active').classList.remove('hidden');
   document.body.classList.add('chat-open');
@@ -265,10 +281,11 @@ function updateActiveChatHeader(){
 
 // ─────────────────────────────────────────────
 // MENSAJES
+// Esquema: { senderId, type, text|null, mediaUrl|null, timestamp, replyTo|null }
 // ─────────────────────────────────────────────
 function listenMessages(){
   if(messagesUnsub) messagesUnsub();
-  const q = query(collection(db,'chats',activeChatId,'messages'), orderBy('createdAt','asc'), limit(300));
+  const q = query(collection(db,'chats',activeChatId,'messages'), orderBy('timestamp','asc'), limit(300));
   messagesUnsub = onSnapshot(q, (snap)=>{
     msgById = {};
     const box = document.getElementById('messages');
@@ -291,7 +308,7 @@ function previewForType(m){
 }
 
 function renderMessageEl(m){
-  const mine = m.senderId===currentUser.uid;
+  const mine = m.senderId===me.uid;
   const wrap = document.createElement('div');
   wrap.className = 'msg '+(mine?'me':'them');
   wrap.dataset.msgid = m.id;
@@ -306,19 +323,18 @@ function renderMessageEl(m){
   if(m.type==='text'){
     inner += `<div>${escapeHtml(m.text||'')}</div>`;
   }else if(m.type==='image'){
-    inner += `<img class="msg-img" src="${m.url}" data-view="${m.url}" data-vtype="image">`;
+    inner += `<img class="msg-img" src="${m.mediaUrl}" data-view="${m.mediaUrl}" data-vtype="image">`;
   }else if(m.type==='video'){
-    inner += `<video class="msg-vid" src="${m.url}" controls></video>`;
+    inner += `<video class="msg-vid" src="${m.mediaUrl}" controls></video>`;
   }else if(m.type==='audio'){
-    inner += `<audio class="msg-aud" src="${m.url}" controls></audio>`;
+    inner += `<audio class="msg-aud" src="${m.mediaUrl}" controls></audio>`;
   }
 
-  const time = m.createdAt && m.createdAt.toDate ? m.createdAt.toDate() : (m.createdAt ? new Date(m.createdAt) : new Date());
+  const time = m.timestamp && m.timestamp.toDate ? m.timestamp.toDate() : (m.timestamp ? new Date(m.timestamp) : new Date());
   const timeStr = time.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
 
   wrap.innerHTML = `
     <div class="msg-row-inline">
-      ${mine?'':''}
       <div class="bubble">${inner}</div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
@@ -358,17 +374,16 @@ function cancelReply(){
 async function sendMessage(payload){
   if(!activeChatId) return;
   const data = {
-    senderId: currentUser.uid,
+    senderId: me.uid,
     type: payload.type,
-    text: payload.text || null,
-    url: payload.url || null,
-    fileName: payload.fileName || null,
-    createdAt: serverTimestamp(),
+    text: payload.type==='text' ? (payload.text||'') : null,
+    mediaUrl: payload.mediaUrl || null,
+    timestamp: serverTimestamp(),
     replyTo: replyingTo ? { ...replyingTo } : null
   };
   await addDoc(collection(db,'chats',activeChatId,'messages'), data);
   await setDoc(doc(db,'chats',activeChatId), {
-    participants: [currentUser.uid, activeChatUid],
+    participants: [me.uid, activeChatUid],
     lastMessage: previewForType(data),
     lastMessageAt: Date.now()
   }, { merge:true });
@@ -384,7 +399,7 @@ function sendText(){
 }
 
 // ─────────────────────────────────────────────
-// ARCHIVOS: imagen / video
+// ARCHIVOS: imagen / video (subidos a Cloudinary)
 // ─────────────────────────────────────────────
 function toggleAttachMenu(){ document.getElementById('attach-menu').classList.toggle('hidden'); }
 function triggerFile(type){
@@ -394,26 +409,15 @@ function triggerFile(type){
 async function sendFile(input, type){
   const file = input.files[0]; if(!file || !activeChatId) return;
   input.value='';
-  toast('Subiendo '+(type==='image'?'imagen':'video')+'...','ok');
+  toast('Subiendo '+(type==='image'?'imagen':'video')+' a Cloudinary...','ok');
   try{
-    const url = await uploadToStorage(`chats/${activeChatId}/${type}/${Date.now()}_${file.name}`, file);
-    await sendMessage({ type, url, fileName:file.name });
+    const mediaUrl = await uploadToCloudinary(file);
+    await sendMessage({ type, mediaUrl });
   }catch(e){ toast('Error al subir archivo: '+e.message,'err'); }
 }
 
-function uploadToStorage(path, file){
-  return new Promise((resolve,reject)=>{
-    const r = ref(storage, path);
-    const task = uploadBytesResumable(r, file);
-    task.on('state_changed', null, reject, async ()=>{
-      try{ const url = await getDownloadURL(task.snapshot.ref); resolve(url); }
-      catch(e){ reject(e); }
-    });
-  });
-}
-
 // ─────────────────────────────────────────────
-// AUDIO — grabación
+// AUDIO — grabación (subida a Cloudinary)
 // ─────────────────────────────────────────────
 async function startRecording(){
   if(!activeChatId) return;
@@ -453,10 +457,10 @@ function stopAndSendRecording(){
     stopRecordingUI();
     if(!recordedChunks.length) return;
     const blob = new Blob(recordedChunks, { type:'audio/webm' });
-    toast('Subiendo audio...','ok');
+    toast('Subiendo audio a Cloudinary...','ok');
     try{
-      const url = await uploadToStorage(`chats/${activeChatId}/audio/${Date.now()}.webm`, blob);
-      await sendMessage({ type:'audio', url, fileName:'audio.webm' });
+      const mediaUrl = await uploadToCloudinary(blob, `audio_${Date.now()}.webm`);
+      await sendMessage({ type:'audio', mediaUrl });
     }catch(e){ toast('Error al subir audio: '+e.message,'err'); }
   };
   mediaRecorder.stop();
@@ -466,7 +470,7 @@ function stopAndSendRecording(){
 // PERFIL
 // ─────────────────────────────────────────────
 function openProfile(which){
-  const u = which==='me' ? myProfile : allUsers[activeChatUid];
+  const u = which==='me' ? me : allUsers[activeChatUid];
   if(!u) return;
   document.getElementById('profile-avatar').src = avatarSrc(u);
   document.getElementById('profile-name').textContent = u.nombre;
@@ -484,12 +488,11 @@ function closeProfile(){ document.getElementById('profile-overlay').classList.re
 async function uploadMyPhoto(input){
   const file = input.files[0]; if(!file) return;
   input.value='';
-  toast('Actualizando foto de perfil...','ok');
+  toast('Subiendo foto a Cloudinary...','ok');
   try{
-    const url = await uploadToStorage(`users/${currentUser.uid}/avatar_${Date.now()}`, file);
-    await updateDoc(doc(db,'users',currentUser.uid), { fotoURL:url });
-    await updateProfile(currentUser, { photoURL:url });
-    myProfile.fotoURL = url;
+    const url = await uploadToCloudinary(file);
+    await updateDoc(doc(db,'users',me.uid), { fotoURL:url });
+    me.fotoURL = url;
     document.getElementById('me-avatar').src = url;
     document.getElementById('profile-avatar').src = url;
     toast('Foto de perfil actualizada','ok');
@@ -533,7 +536,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.addEventListener('click', (e)=>{
     const menu = document.getElementById('attach-menu');
     if(menu && !menu.classList.contains('hidden')){
-      if(!menu.contains(e.target) && e.target.id !== undefined && !e.target.closest('.input-row button[onclick*="toggleAttachMenu"]')){
+      if(!menu.contains(e.target) && !e.target.closest('.input-row button[onclick*="toggleAttachMenu"]')){
         menu.classList.add('hidden');
       }
     }
@@ -550,3 +553,4 @@ Object.assign(window, {
   openProfile, closeProfile, uploadMyPhoto,
   openLightboxUrl, closeLightbox, cancelReply, renderContacts
 });
+

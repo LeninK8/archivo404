@@ -27,6 +27,13 @@ let regPhotoFile = null;
 let presenceInterval = null, statusRefreshInterval = null;
 let mediaRecorder = null, recordedChunks = [], recStream = null, recTimer = null, recSeconds = 0;
 let msgById = {};
+let viewOnceMode = false;
+let chatDocUnsub = null;
+let otherIsTyping = false;
+let typingDebounce = null;
+let searchOpen = false;
+let reactingMsg = null;
+const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
 
 // ─────────────────────────────────────────────
 // BOOT
@@ -116,7 +123,8 @@ async function doRegister(){
 
     let fotoURL = '';
     if(regPhotoFile){
-      fotoURL = await uploadToCloudinary(regPhotoFile);
+      const compressed = await compressImage(regPhotoFile);
+      fotoURL = await uploadToCloudinary(compressed, 'avatar_'+uid+'.jpg');
     }
     const passHash = await hashPassword(pass);
 
@@ -161,6 +169,7 @@ async function doLogout(){
   clearInterval(presenceInterval); clearInterval(statusRefreshInterval);
   if(usersUnsub) usersUnsub();
   if(messagesUnsub) messagesUnsub();
+  if(chatDocUnsub) chatDocUnsub();
   localStorage.removeItem(SESSION_KEY);
   me = null; activeChatUid = null; activeChatId = null;
   document.body.classList.remove('chat-open');
@@ -262,21 +271,50 @@ function openChatWith(uid){
   document.getElementById('chat-active').classList.remove('hidden');
   document.body.classList.add('chat-open');
   cancelReply();
+  searchOpen = false;
+  document.getElementById('search-bar')?.classList.add('hidden');
+  otherIsTyping = false;
   updateActiveChatHeader();
   listenMessages();
+  listenChatDoc();
   renderContacts();
 }
 function backToList(){ document.body.classList.remove('chat-open'); }
+
+function listenChatDoc(){
+  if(chatDocUnsub) chatDocUnsub();
+  chatDocUnsub = onSnapshot(doc(db,'chats',activeChatId), (snap)=>{
+    const data = snap.data();
+    const typingMap = data?.typing || {};
+    const ts = typingMap[activeChatUid];
+    otherIsTyping = !!ts && (Date.now()-ts) < 4000;
+    updateActiveChatHeader();
+  });
+}
 
 function updateActiveChatHeader(){
   if(!activeChatUid) return;
   const u = allUsers[activeChatUid]; if(!u) return;
   document.getElementById('ch-avatar').src = avatarSrc(u);
   document.getElementById('ch-name').textContent = u.nombre;
-  const online = isOnline(u.lastSeen);
   const st = document.getElementById('ch-status');
+  if(otherIsTyping){
+    st.textContent = 'escribiendo...';
+    st.classList.add('online');
+    return;
+  }
+  const online = isOnline(u.lastSeen);
   st.textContent = online ? 'en línea' : 'últ. vez ' + fmtLastSeen(u.lastSeen);
   st.classList.toggle('online', online);
+}
+
+function handleTypingInput(){
+  if(!activeChatId) return;
+  setDoc(doc(db,'chats',activeChatId), { [`typing.${me.uid}`]: Date.now() }, { merge:true }).catch(()=>{});
+  clearTimeout(typingDebounce);
+  typingDebounce = setTimeout(()=>{
+    setDoc(doc(db,'chats',activeChatId), { [`typing.${me.uid}`]: 0 }, { merge:true }).catch(()=>{});
+  }, 3000);
 }
 
 // ─────────────────────────────────────────────
@@ -291,11 +329,33 @@ function listenMessages(){
     const box = document.getElementById('messages');
     const wasNearBottom = (box.scrollHeight - box.scrollTop - box.clientHeight) < 120;
     box.innerHTML='';
+    const toMarkRead = [];
     snap.forEach(d=>{
       const m = d.data(); m.id = d.id; msgById[d.id]=m;
       box.appendChild(renderMessageEl(m));
+      if(m.senderId!==me.uid && !m.read && !m.deleted) toMarkRead.push(d.id);
     });
     if(wasNearBottom) box.scrollTop = box.scrollHeight;
+    if(searchOpen) filterMessages();
+    toMarkRead.forEach(id=>{
+      updateDoc(doc(db,'chats',activeChatId,'messages',id), { read:true }).catch(()=>{});
+    });
+  });
+}
+
+function toggleSearch(){
+  searchOpen = !searchOpen;
+  document.getElementById('search-bar').classList.toggle('hidden', !searchOpen);
+  const inp = document.getElementById('search-input');
+  inp.value='';
+  if(searchOpen) inp.focus();
+  filterMessages();
+}
+function filterMessages(){
+  const q = (document.getElementById('search-input')?.value||'').toLowerCase().trim();
+  document.querySelectorAll('#messages .msg').forEach(el=>{
+    if(!q){ el.style.display=''; return; }
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 }
 
@@ -314,41 +374,141 @@ function renderMessageEl(m){
   wrap.dataset.msgid = m.id;
 
   let inner = '';
-  if(m.replyTo){
-    inner += `<div class="quote" data-jump="${m.replyTo.id}">
-      <div class="quote-name">${escapeHtml(m.replyTo.senderName)}</div>
-      <div class="quote-text">${escapeHtml(m.replyTo.preview||'')}</div>
-    </div>`;
-  }
-  if(m.type==='text'){
-    inner += `<div>${escapeHtml(m.text||'')}</div>`;
-  }else if(m.type==='image'){
-    inner += `<img class="msg-img" src="${m.mediaUrl}" data-view="${m.mediaUrl}" data-vtype="image">`;
-  }else if(m.type==='video'){
-    inner += `<video class="msg-vid" src="${m.mediaUrl}" controls></video>`;
-  }else if(m.type==='audio'){
-    inner += `<audio class="msg-aud" src="${m.mediaUrl}" controls></audio>`;
+
+  if(m.deleted){
+    inner = `<div class="msg-deleted">🚫 Mensaje eliminado</div>`;
+  }else{
+    if(m.replyTo){
+      inner += `<div class="quote" data-jump="${m.replyTo.id}">
+        <div class="quote-name">${escapeHtml(m.replyTo.senderName)}</div>
+        <div class="quote-text">${escapeHtml(m.replyTo.preview||'')}</div>
+      </div>`;
+    }
+    if(m.type==='text'){
+      inner += `<div>${escapeHtml(m.text||'')}</div>`;
+    }else if(m.type==='image' || m.type==='video'){
+      if(m.viewOnce){
+        if(m.opened){
+          inner += `<div class="vo-seen">👁 ${m.type==='image'?'Foto':'Video'} vista${m.openedBy && m.openedBy!==me.uid ? '' : ''}</div>`;
+        }else if(mine){
+          inner += `<div class="vo-wrap"><span class="vo-badge">🔥 VER UNA VEZ</span>
+            <div class="vo-lock"><span class="vo-lock-i">${m.type==='image'?'📷':'🎬'}</span><span class="vo-lock-t">Enviada — se verá una sola vez</span></div></div>`;
+        }else{
+          inner += `<div class="vo-lock" data-openonce="${m.id}"><span class="vo-lock-i">🔥</span><span class="vo-lock-t">Toca para ver — solo una vez</span></div>`;
+        }
+      }else if(m.type==='image'){
+        inner += `<img class="msg-img" src="${m.mediaUrl}" data-view="${m.mediaUrl}" data-vtype="image">`;
+      }else{
+        inner += `<video class="msg-vid" src="${m.mediaUrl}" controls></video>`;
+      }
+    }else if(m.type==='audio'){
+      inner += `<audio class="msg-aud" src="${m.mediaUrl}" controls></audio>`;
+    }
   }
 
   const time = m.timestamp && m.timestamp.toDate ? m.timestamp.toDate() : (m.timestamp ? new Date(m.timestamp) : new Date());
   const timeStr = time.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+  const editedTag = (m.edited && !m.deleted) ? ' <span class="msg-edited">(editado)</span>' : '';
+  const checks = (mine && !m.deleted) ? `<span class="msg-check ${m.read?'read':''}">${m.read?'✓✓':'✓'}</span>` : '';
 
   wrap.innerHTML = `
     <div class="msg-row-inline">
       <div class="bubble">${inner}</div>
     </div>
+    ${renderReactionsHtml(m)}
     <div style="display:flex;align-items:center;gap:6px;">
-      <span class="msg-time">${timeStr}</span>
-      <span class="msg-reply-actions"><button class="msg-reply-btn" title="Responder">↩</button></span>
+      <span class="msg-time">${timeStr}${editedTag}</span>
+      ${checks}
+      <span class="msg-reply-actions">
+        ${m.deleted?'':'<button class="msg-reply-btn" title="Responder">↩</button>'}
+        ${(m.deleted)?'':'<button class="msg-react-btn" title="Reaccionar">😊</button>'}
+        ${(mine && m.type==='text' && !m.deleted)?'<button class="msg-edit-btn" title="Editar">✏️</button>':''}
+        ${(mine && !m.deleted)?'<button class="msg-del-btn" title="Eliminar">🗑</button>':''}
+      </span>
     </div>`;
 
-  wrap.querySelector('.msg-reply-btn').onclick = ()=> setReply(m.id, mine?'Tú':(allUsers[m.senderId]?.nombre||'Operador'), m.type, previewForType(m));
+  const replyBtn = wrap.querySelector('.msg-reply-btn');
+  if(replyBtn) replyBtn.onclick = ()=> setReply(m.id, mine?'Tú':(allUsers[m.senderId]?.nombre||'Operador'), m.type, previewForType(m));
+  const delBtn = wrap.querySelector('.msg-del-btn');
+  if(delBtn) delBtn.onclick = ()=> deleteMessage(m.id);
+  const editBtn = wrap.querySelector('.msg-edit-btn');
+  if(editBtn) editBtn.onclick = ()=> editMessage(m);
+  const reactBtn = wrap.querySelector('.msg-react-btn');
+  if(reactBtn) reactBtn.onclick = (ev)=> openReactionPicker(ev, m);
   const img = wrap.querySelector('[data-view]');
   if(img) img.onclick = ()=> openLightboxUrl(img.dataset.view, img.dataset.vtype);
   const quote = wrap.querySelector('.quote');
   if(quote) quote.onclick = ()=> scrollToMessage(quote.dataset.jump);
+  const voLock = wrap.querySelector('[data-openonce]');
+  if(voLock) voLock.onclick = ()=> openViewOnce(m);
+  wrap.querySelectorAll('.reaction-pill').forEach(p=>{
+    p.onclick = ()=> toggleReaction(m, p.dataset.emoji);
+  });
 
   return wrap;
+}
+
+function renderReactionsHtml(m){
+  if(!m.reactions) return '';
+  const counts = {};
+  Object.values(m.reactions).forEach(e=>{ counts[e]=(counts[e]||0)+1; });
+  const entries = Object.entries(counts);
+  if(!entries.length) return '';
+  return `<div class="reactions-row">${entries.map(([e,c])=>`<span class="reaction-pill" data-emoji="${e}">${e}${c>1?' '+c:''}</span>`).join('')}</div>`;
+}
+
+function openReactionPicker(ev, m){
+  reactingMsg = m;
+  const picker = document.getElementById('reaction-picker');
+  const r = ev.currentTarget.getBoundingClientRect();
+  picker.style.left = Math.max(8, Math.min(window.innerWidth-260, r.left-80))+'px';
+  picker.style.top = Math.max(8, r.top-46)+'px';
+  picker.classList.remove('hidden');
+}
+function pickReaction(emoji){
+  if(reactingMsg) toggleReaction(reactingMsg, emoji);
+  document.getElementById('reaction-picker').classList.add('hidden');
+}
+async function toggleReaction(m, emoji){
+  const current = m.reactions ? m.reactions[me.uid] : null;
+  const newReactions = { ...(m.reactions||{}) };
+  if(current===emoji) delete newReactions[me.uid];
+  else newReactions[me.uid] = emoji;
+  try{
+    await updateDoc(doc(db,'chats',activeChatId,'messages',m.id), { reactions:newReactions });
+  }catch(e){ toast('Error al reaccionar: '+e.message,'err'); }
+}
+
+async function editMessage(m){
+  const newText = prompt('Editar mensaje:', m.text||'');
+  if(newText===null) return;
+  const trimmed = newText.trim();
+  if(!trimmed) return;
+  try{
+    await updateDoc(doc(db,'chats',activeChatId,'messages',m.id), { text: trimmed, edited: true });
+  }catch(e){ toast('Error al editar: '+e.message,'err'); }
+}
+
+async function openViewOnce(m){
+  openLightboxUrl(m.mediaUrl, m.type);
+  try{
+    await updateDoc(doc(db,'chats',activeChatId,'messages',m.id), { opened:true, openedBy: me.uid });
+  }catch(e){ toast('Error al marcar como visto: '+e.message,'err'); }
+}
+
+async function deleteMessage(id){
+  if(!confirm('¿Eliminar este mensaje? Esta acción no se puede deshacer.')) return;
+  try{
+    await updateDoc(doc(db,'chats',activeChatId,'messages',id), {
+      deleted:true, text:null, mediaUrl:null, viewOnce:false
+    });
+  }catch(e){ toast('Error al eliminar: '+e.message,'err'); }
+}
+
+function toggleViewOnceMode(){
+  viewOnceMode = !viewOnceMode;
+  document.getElementById('viewonce-btn').classList.toggle('act', viewOnceMode);
+  toast(viewOnceMode ? '🔥 La próxima foto/video se enviará para verse una sola vez' : 'Modo "ver una vez" desactivado');
 }
 
 function scrollToMessage(id){
@@ -379,8 +539,10 @@ async function sendMessage(payload){
     text: payload.type==='text' ? (payload.text||'') : null,
     mediaUrl: payload.mediaUrl || null,
     timestamp: serverTimestamp(),
-    replyTo: replyingTo ? { ...replyingTo } : null
+    replyTo: replyingTo ? { ...replyingTo } : null,
+    deleted: false
   };
+  if(payload.viewOnce){ data.viewOnce = true; data.opened = false; }
   await addDoc(collection(db,'chats',activeChatId,'messages'), data);
   await setDoc(doc(db,'chats',activeChatId), {
     participants: [me.uid, activeChatUid],
@@ -399,6 +561,34 @@ function sendText(){
 }
 
 // ─────────────────────────────────────────────
+// COMPRESIÓN DE IMÁGENES (antes de subir a Cloudinary)
+// ─────────────────────────────────────────────
+function compressImage(file, maxDim=1600, quality=0.82){
+  return new Promise((resolve)=>{
+    if(!file || !file.type || !file.type.startsWith('image/') || file.type==='image/gif'){ resolve(file); return; }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{
+      let { width, height } = img;
+      if(width>maxDim || height>maxDim){
+        const scale = maxDim/Math.max(width,height);
+        width = Math.round(width*scale); height = Math.round(height*scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width=width; canvas.height=height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img,0,0,width,height);
+      canvas.toBlob(blob=>{
+        URL.revokeObjectURL(url);
+        resolve(blob || file);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+// ─────────────────────────────────────────────
 // ARCHIVOS: imagen / video (subidos a Cloudinary)
 // ─────────────────────────────────────────────
 function toggleAttachMenu(){ document.getElementById('attach-menu').classList.toggle('hidden'); }
@@ -409,10 +599,17 @@ function triggerFile(type){
 async function sendFile(input, type){
   const file = input.files[0]; if(!file || !activeChatId) return;
   input.value='';
+  const asViewOnce = viewOnceMode;
+  if(viewOnceMode){ viewOnceMode=false; document.getElementById('viewonce-btn').classList.remove('act'); }
   toast('Subiendo '+(type==='image'?'imagen':'video')+' a Cloudinary...','ok');
   try{
-    const mediaUrl = await uploadToCloudinary(file);
-    await sendMessage({ type, mediaUrl });
+    const toUpload = type==='image' ? await compressImage(file) : file;
+    const mediaUrl = type==='image'
+      ? await uploadToCloudinary(toUpload, 'foto_'+Date.now()+'.jpg')
+      : await uploadToCloudinary(toUpload);
+    const payload = { type, mediaUrl };
+    if(asViewOnce){ payload.viewOnce = true; payload.opened = false; }
+    await sendMessage(payload);
   }catch(e){ toast('Error al subir archivo: '+e.message,'err'); }
 }
 
@@ -490,7 +687,8 @@ async function uploadMyPhoto(input){
   input.value='';
   toast('Subiendo foto a Cloudinary...','ok');
   try{
-    const url = await uploadToCloudinary(file);
+    const compressed = await compressImage(file);
+    const url = await uploadToCloudinary(compressed, 'avatar_'+me.uid+'_'+Date.now()+'.jpg');
     await updateDoc(doc(db,'users',me.uid), { fotoURL:url });
     me.fotoURL = url;
     document.getElementById('me-avatar').src = url;
@@ -533,11 +731,22 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('login-apodo')?.addEventListener('keypress', e=>{ if(e.key==='Enter') doLogin(); });
   document.getElementById('reg-pass2')?.addEventListener('keypress', e=>{ if(e.key==='Enter') doRegister(); });
   document.getElementById('msg-input')?.addEventListener('keypress', e=>{ if(e.key==='Enter') sendText(); });
+  document.getElementById('msg-input')?.addEventListener('input', handleTypingInput);
+  const picker = document.getElementById('reaction-picker');
+  if(picker){
+    picker.innerHTML = REACTION_EMOJIS.map(e=>`<button onclick="pickReaction('${e}')">${e}</button>`).join('');
+  }
   document.addEventListener('click', (e)=>{
     const menu = document.getElementById('attach-menu');
     if(menu && !menu.classList.contains('hidden')){
       if(!menu.contains(e.target) && !e.target.closest('.input-row button[onclick*="toggleAttachMenu"]')){
         menu.classList.add('hidden');
+      }
+    }
+    const picker = document.getElementById('reaction-picker');
+    if(picker && !picker.classList.contains('hidden')){
+      if(!picker.contains(e.target) && !e.target.closest('.msg-react-btn')){
+        picker.classList.add('hidden');
       }
     }
   });
@@ -551,6 +760,7 @@ Object.assign(window, {
   openChatWith, backToList, sendText, sendFile, triggerFile, toggleAttachMenu,
   startRecording, cancelRecording, stopAndSendRecording,
   openProfile, closeProfile, uploadMyPhoto,
-  openLightboxUrl, closeLightbox, cancelReply, renderContacts
+  openLightboxUrl, closeLightbox, cancelReply, renderContacts,
+  toggleViewOnceMode, deleteMessage, openViewOnce,
+  toggleSearch, filterMessages, editMessage, pickReaction
 });
-

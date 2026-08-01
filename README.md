@@ -1,112 +1,115 @@
-# ARCHIVO 404 — CHAT
+# ARCHIVO 404 — CHAT (Firestore + Cloudinary, sin Firebase Storage)
 
-Chat privado estilo WhatsApp (texto, audio, imágenes, videos, respuestas citadas,
-estado en línea/última vez, perfiles) construido sobre Firebase para que
-funcione en tiempo real entre tu laptop y tu celular.
+Chat privado estilo WhatsApp: texto, audio, imágenes, videos, respuestas
+citadas, estado en línea/última vez, perfiles.
 
-## 1. Estructura
+## Arquitectura
 
-```
-archivo404-chat/
-├── index.html
-├── css/style.css
-└── js/
-    ├── firebase.js   ← AQUÍ VAN TUS CREDENCIALES
-    └── app.js
-```
+- **Cloud Firestore** → usuarios, perfiles, contactos, chats, mensajes,
+  respuestas, estado en línea, última conexión. (Gratis, sin tarjeta.)
+- **Cloudinary** → TODO el almacenamiento de archivos (fotos de perfil,
+  imágenes, videos, audios del chat). Reemplaza por completo a Firebase
+  Storage, que desde el 3 de febrero de 2026 exige el plan de pago Blaze.
+  Cloudinary tiene un plan gratuito permanente sin necesidad de tarjeta.
+- **Login/registro**: verificación propia con hash SHA-256 de la
+  contraseña, comparado en Firestore. La sesión se guarda en el
+  `localStorage` de cada dispositivo.
 
-## 2. Configurar Firebase (5-10 min)
+Firebase Storage **ya no se usa en absoluto** — no hace falta activarlo
+ni pagar nada por él.
 
-1. Ve a https://console.firebase.google.com/ → **Agregar proyecto**.
-2. **Authentication** → pestaña *Sign-in method* → habilita **Correo electrónico/contraseña**.
-3. **Firestore Database** → *Crear base de datos* → modo producción → elige región.
-4. **Storage** → *Comenzar* → modo producción → misma región.
-5. ⚙ **Configuración del proyecto** → baja a *Tus apps* → `</>` (Web) → registra la app.
-6. Copia el objeto `firebaseConfig` que te muestra y pégalo en `js/firebase.js`,
-   reemplazando los valores `"REEMPLAZA..."`.
+## 1. Ya tienes esto configurado
 
-## 3. Reglas de seguridad (IMPORTANTE — protege las cuentas)
+- `js/firebase.js` → tus credenciales del proyecto `archivo404` (solo
+  Firestore).
+- `js/cloudinary.js` → tu `cloud_name` (`djktyduiu`) y `upload_preset`
+  (`archivo404`).
 
-A diferencia de reglas abiertas (`allow read, write: if true`), estas exigen que
-el usuario haya iniciado sesión, y que solo pueda escribir en su propio perfil
-o en chats donde él participa. Así nadie puede leer o modificar la cuenta de otro.
+## 2. Lo único que falta activar
 
-**Firestore → pestaña Reglas:**
+### Firestore (si no lo hiciste ya)
+Firebase Console → **Firestore Database** → *Crear base de datos* → modo
+producción → elige región.
+
+**Reglas** (pestaña Reglas → pega y publica):
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Perfiles de usuario: cualquiera autenticado puede LEER (para la lista de
-    // contactos), pero solo el dueño puede escribir el suyo.
-    match /users/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
-    }
-
-    // Chats: solo los dos participantes pueden leer/escribir el chat y sus mensajes.
-    match /chats/{chatId} {
-      allow read, write: if request.auth != null &&
-        request.auth.uid in resource.data.participants;
-      allow create: if request.auth != null &&
-        request.auth.uid in request.resource.data.participants;
-
-      match /messages/{msgId} {
-        allow read: if request.auth != null &&
-          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
-        allow create: if request.auth != null &&
-          request.auth.uid == request.resource.data.senderId &&
-          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
-      }
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
 ```
 
-**Storage → pestaña Reglas:**
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    // Fotos de perfil: cualquiera autenticado puede ver, solo el dueño sube la suya.
-    match /users/{uid}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
-    }
-    // Archivos de chat: solo usuarios autenticados (validado además por Firestore).
-    match /chats/{chatId}/{allPaths=**} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
+### Cloudinary — crear el Upload Preset "unsigned"
 
-## 4. Publicar (para usarlo desde laptop y celular)
+Esto es indispensable, si no lo creas las subidas van a fallar:
 
-**Opción rápida — GitHub Pages:**
-1. Sube la carpeta a un repositorio de GitHub.
+1. Ve a https://console.cloudinary.com/ e inicia sesión (o crea una
+   cuenta gratis, no pide tarjeta).
+2. Verifica que tu **Cloud Name** sea `djktyduiu` (aparece arriba en el
+   dashboard). Si tu cuenta tiene otro Cloud Name, avísame para
+   actualizarlo en `js/cloudinary.js`.
+3. Ve a ⚙ **Settings** → pestaña **Upload**.
+4. Baja hasta **Upload presets** → **Add upload preset**.
+5. Configura:
+   - **Preset name**: `archivo404` (debe ser exacto)
+   - **Signing Mode**: **Unsigned** (muy importante — así el navegador
+     puede subir archivos sin exponer tu API Secret)
+   - Todo lo demás puedes dejarlo por defecto.
+6. **Save**.
+
+Con eso, las subidas desde la app funcionan directo a tu cuenta de
+Cloudinary sin usar API Key ni API Secret en el código.
+
+## 3. Publicar (para usarlo desde laptop y celular)
+
+**GitHub Pages (recomendado):**
+1. Sube la carpeta completa a un repositorio de GitHub.
 2. Settings → Pages → Source: rama `main` / raíz.
 3. Tu chat estará en `https://TUUSUARIO.github.io/TUREPOSITORIO/`.
-4. Abre ese mismo link en tu laptop y en tu celular — cada dispositivo mantiene
-   su propia sesión, y los mensajes se sincronizan en tiempo real vía Firebase.
+4. Abre ese mismo link en tu laptop y en tu celular.
 
-**Opción alterna:** Netlify, Vercel o Firebase Hosting (arrastra la carpeta).
+## 4. Uso
 
-## 5. Uso
+- **Crear cuenta**: nombre completo, apodo único, contraseña (mín. 6
+  caracteres), foto opcional.
+- **Iniciar sesión**: apodo + contraseña.
+- **Contactos**: lista de todos los registrados, punto verde = en línea.
+- **Chat**: texto, 📎 foto/video, 🎤 grabar audio.
+- **Responder**: pasa el mouse/toca un mensaje → ↩ para citarlo.
+- **Perfil**: toca tu avatar (arriba izquierda) para cambiar tu foto, o
+  el avatar del contacto en el chat para ver el suyo.
 
-- **Crear cuenta**: nombre completo, apodo único, contraseña, foto opcional.
-- **Iniciar sesión**: con tu apodo + contraseña (cada cuenta es privada e independiente).
-- **Lista de contactos**: todos los usuarios registrados, con punto verde si están
-  en línea o "últ. vez hace X" si no.
-- **Chat**: texto, 📎 para foto/video, 🎤 para grabar audio (mantén, detén, envía).
-- **Responder**: pasa el mouse/toca un mensaje → ↩ para citarlo en tu respuesta.
-- **Perfil**: toca tu avatar (arriba a la izquierda) para ver/cambiar tu foto,
-  o el avatar del contacto en el chat para ver el suyo.
+## Esquema de datos (Firestore)
 
-## Notas
+```
+users/{apodo}
+  ├─ uid, nombre, apodo, apodoLower
+  ├─ passHash        (hash SHA-256, nunca texto plano)
+  ├─ fotoURL          → URL de Cloudinary
+  ├─ createdAt, lastSeen
 
-- El estado "en línea" se calcula por actividad reciente (heartbeat cada 15s).
-- Los mensajes, fotos, videos y audios se guardan en Firestore + Storage, por lo
-  que persisten y se sincronizan entre todos tus dispositivos.
-- La capa gratuita (Spark) de Firebase es más que suficiente para uso personal.
+chats/{uidA_uidB}
+  ├─ participants: [uidA, uidB]
+  ├─ lastMessage, lastMessageAt
+  └─ messages/{msgId}
+      ├─ senderId
+      ├─ type: "text" | "image" | "video" | "audio"
+      ├─ text        (solo si type === "text")
+      ├─ mediaUrl    (solo si type !== "text" → URL de Cloudinary)
+      ├─ timestamp
+      └─ replyTo: { id, senderName, type, preview } | null
+```
+
+## Notas técnicas
+
+- `uploadToCloudinary(file, filename?)` en `js/cloudinary.js` es la
+  única función que sube archivos — a `https://api.cloudinary.com/v1_1/
+  djktyduiu/auto/upload` con el preset unsigned `archivo404`.
+- No se usa `API Key` ni `API Secret` de Cloudinary en el cliente.
+- El estado "en línea" se calcula por actividad reciente (heartbeat cada
+  15s), guardado en Firestore.
 

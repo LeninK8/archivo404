@@ -105,6 +105,12 @@
               <div class="ch-status" id="ch-status">—</div>
             </div>
           </div>
+          <button class="ic-btn" title="Buscar en este chat" onclick="toggleSearch()">🔍</button>
+        </div>
+
+        <div id="search-bar" class="search-bar hidden">
+          <input type="text" id="search-input" placeholder="Buscar en este chat..." oninput="filterMessages()">
+          <button class="ic-btn" onclick="toggleSearch()">✕</button>
         </div>
 
         <div id="messages" class="messages"></div>
@@ -134,6 +140,7 @@
           </div>
           <input type="file" id="file-image" accept="image/*" class="hidden" onchange="sendFile(this,'image')">
           <input type="file" id="file-video" accept="video/*" class="hidden" onchange="sendFile(this,'video')">
+          <button class="ic-btn" id="viewonce-btn" title="Enviar próxima foto/video para verse una sola vez" onclick="toggleViewOnceMode()">🔥</button>
           <input type="text" id="msg-input" placeholder="Escribe un mensaje..." autocomplete="off">
           <button class="ic-btn" id="mic-btn" onclick="startRecording()">🎤</button>
           <button class="ic-btn send-btn" id="send-btn" onclick="sendText()">➤</button>
@@ -157,6 +164,9 @@
     <div class="profile-since" id="profile-since">—</div>
   </div>
 </div>
+
+<!-- ═══════════════ PICKER DE REACCIONES ═══════════════ -->
+<div id="reaction-picker" class="reaction-picker hidden"></div>
 
 <!-- ═══════════════ LIGHTBOX (ver imagen/video grande) ═══════════════ -->
 <div id="lightbox" class="overlay" onclick="closeLightbox()">

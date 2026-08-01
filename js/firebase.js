@@ -1,118 +1,51 @@
-// ═══════════════════════════════════════════════════════
-//  ARCHIVO 404 — MÓDULO DE ALMACENAMIENTO
-//  Firestore  → metadatos (gratis)
-//  Cloudinary → archivos reales: fotos, videos, música
-// ═══════════════════════════════════════════════════════
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+// ════════════════════════════════════════════════════════════
+//  ARCHIVO 404 — CHAT · Configuración de Firebase
+// ════════════════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-    getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  onAuthStateChanged, signOut, updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection,
+  query, where, orderBy, onSnapshot, serverTimestamp, addDoc, limit
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytesResumable, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-// ─── CREDENCIALES FIREBASE ────────────────────────────────
+// ⚠️  REEMPLAZA estos valores con los de TU proyecto Firebase
+// (Configuración del proyecto → Tus apps → objeto firebaseConfig)
 const firebaseConfig = {
-    apiKey:            "AIzaSyBMRggkr4F3hCshprZx8tBU-gtRw6ZEZTE",
-    authDomain:        "archivo404.firebaseapp.com",
-    projectId:         "archivo404",
-    storageBucket:     "archivo404.firebasestorage.app",
-    messagingSenderId: "325717064494",
-    appId:             "1:325717064494:web:088dc7851a5be86dc5d8bf"
+  apiKey:            "REEMPLAZA_CON_TU_API_KEY",
+  authDomain:        "REEMPLAZA.firebaseapp.com",
+  projectId:         "REEMPLAZA_CON_TU_PROJECT_ID",
+  storageBucket:     "REEMPLAZA.appspot.com",
+  messagingSenderId: "REEMPLAZA",
+  appId:             "REEMPLAZA"
 };
-// ──────────────────────────────────────────────────────────
 
-// ─── CREDENCIALES CLOUDINARY ──────────────────────────────
-const CLOUD_NAME    = "djktyduiu";
-const UPLOAD_PRESET = "archivo404";
-// ──────────────────────────────────────────────────────────
+const app     = initializeApp(firebaseConfig);
+export const auth    = getAuth(app);
+export const db      = getFirestore(app);
+export const storage = getStorage(app);
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+export {
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged,
+  signOut, updateProfile, doc, setDoc, getDoc, getDocs, updateDoc, collection,
+  query, where, orderBy, onSnapshot, serverTimestamp, addDoc, limit,
+  ref, uploadBytesResumable, getDownloadURL
+};
 
-// ══════════════════════════════════════════════════════════
-//  FIRESTORE — metadatos
-// ══════════════════════════════════════════════════════════
-
-export async function fsSave(col, id, data) {
-    await setDoc(doc(db, col, id), data);
+// Firebase Auth exige un correo — lo generamos internamente a partir del apodo
+// para que el usuario solo tenga que recordar su APODO + CONTRASEÑA.
+export function apodoToEmail(apodo) {
+  const clean = apodo.toLowerCase().trim().replace(/[^a-z0-9_.-]/g, "");
+  if (!clean) throw new Error("Apodo inválido. Usa letras, números, ., _ o -.");
+  return `${clean}@archivo404.chat`;
 }
 
-export async function fsGet(col, id) {
-    const snap = await getDoc(doc(db, col, id));
-    return snap.exists() ? snap.data() : null;
+// ID determinístico y único para el chat entre dos usuarios
+export function chatIdFor(uidA, uidB) {
+  return [uidA, uidB].sort().join("_");
 }
-
-export async function fsGetAll(col) {
-    const snap = await getDocs(collection(db, col));
-    const result = {};
-    snap.forEach(d => result[d.id] = d.data());
-    return result;
-}
-
-export async function fsDelete(col, id) {
-    await deleteDoc(doc(db, col, id));
-}
-
-// ══════════════════════════════════════════════════════════
-//  CLOUDINARY — subir archivos con progreso
-// ══════════════════════════════════════════════════════════
-
-export function storageUpload(path, file, onProgress) {
-    return new Promise((resolve, reject) => {
-        let resourceType = "auto";
-        if (file.type.startsWith("image/")) resourceType = "image";
-        if (file.type.startsWith("video/")) resourceType = "video";
-        if (file.type.startsWith("audio/")) resourceType = "video"; // Cloudinary trata audio como video
-
-        const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", UPLOAD_PRESET);
-        formData.append("public_id", path.replace(/[^a-zA-Z0-9_\-\/]/g, "_"));
-
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.addEventListener("progress", e => {
-            if (e.lengthComputable && onProgress) {
-                onProgress((e.loaded / e.total) * 100);
-            }
-        });
-
-        xhr.addEventListener("load", () => {
-            if (xhr.status === 200) {
-                const res = JSON.parse(xhr.responseText);
-                resolve(res.secure_url);
-            } else {
-                reject(new Error("Cloudinary error: " + xhr.responseText));
-            }
-        });
-
-        xhr.addEventListener("error", () => reject(new Error("Error de red al subir")));
-
-        xhr.open("POST", url);
-        xhr.send(formData);
-    });
-}
-
-// ══════════════════════════════════════════════════════════
-//  CLOUDINARY — eliminar (se gestiona desde el dashboard)
-// ══════════════════════════════════════════════════════════
-
-export async function storageDelete(path) {
-    console.info("Elimina archivos desde console.cloudinary.com →", path);
-}
-
-// ══════════════════════════════════════════════════════════
-//  TEST DE CONEXIÓN
-// ══════════════════════════════════════════════════════════
-
-export async function testConnection() {
-    try {
-        await getDoc(doc(db, "_ping", "test"));
-        return true;
-    } catch(e) {
-        return false;
-    }
-}
-
-export { db };

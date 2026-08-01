@@ -1,118 +1,112 @@
-# ARCHIVO 404 — Setup Guide
+# ARCHIVO 404 — CHAT
 
-## Estructura del proyecto
+Chat privado estilo WhatsApp (texto, audio, imágenes, videos, respuestas citadas,
+estado en línea/última vez, perfiles) construido sobre Firebase para que
+funcione en tiempo real entre tu laptop y tu celular.
+
+## 1. Estructura
+
 ```
-archivo404/
+archivo404-chat/
 ├── index.html
-├── css/
-│   ├── style.css
-│   └── animations.css
+├── css/style.css
 └── js/
-    ├── app.js
-    └── firebase.js   ← AQUÍ VAN TUS CREDENCIALES
+    ├── firebase.js   ← AQUÍ VAN TUS CREDENCIALES
+    └── app.js
 ```
 
----
+## 2. Configurar Firebase (5-10 min)
 
-## Paso 1 — Crear tu proyecto Firebase
+1. Ve a https://console.firebase.google.com/ → **Agregar proyecto**.
+2. **Authentication** → pestaña *Sign-in method* → habilita **Correo electrónico/contraseña**.
+3. **Firestore Database** → *Crear base de datos* → modo producción → elige región.
+4. **Storage** → *Comenzar* → modo producción → misma región.
+5. ⚙ **Configuración del proyecto** → baja a *Tus apps* → `</>` (Web) → registra la app.
+6. Copia el objeto `firebaseConfig` que te muestra y pégalo en `js/firebase.js`,
+   reemplazando los valores `"REEMPLAZA..."`.
 
-1. Ve a **https://console.firebase.google.com/**
-2. Click en **"Agregar proyecto"** → ponle un nombre → continuar
-3. Desactiva Google Analytics si no lo necesitas → crear proyecto
+## 3. Reglas de seguridad (IMPORTANTE — protege las cuentas)
 
-### Activar Firestore
-4. En el menú izquierdo → **Firestore Database** → "Crear base de datos"
-5. Elige **modo de producción** → selecciona tu región → listo
+A diferencia de reglas abiertas (`allow read, write: if true`), estas exigen que
+el usuario haya iniciado sesión, y que solo pueda escribir en su propio perfil
+o en chats donde él participa. Así nadie puede leer o modificar la cuenta de otro.
 
-### Activar Storage
-6. En el menú izquierdo → **Storage** → "Comenzar"
-7. Modo producción → elige región → listo
-
-### Obtener credenciales
-8. Click en el ícono ⚙ (rueda) → **Configuración del proyecto**
-9. Baja hasta "Tus apps" → click en **`</>`** (Web)
-10. Registra la app con cualquier nombre
-11. Copia el objeto `firebaseConfig` que aparece
-
----
-
-## Paso 2 — Pegar credenciales en el código
-
-Abre **`js/firebase.js`** y reemplaza esta sección:
-
-```javascript
-const firebaseConfig = {
-    apiKey:            "REEMPLAZA_CON_TU_API_KEY",
-    authDomain:        "REEMPLAZA.firebaseapp.com",
-    projectId:         "REEMPLAZA_CON_TU_PROJECT_ID",
-    storageBucket:     "REEMPLAZA.appspot.com",
-    messagingSenderId: "REEMPLAZA",
-    appId:             "REEMPLAZA"
-};
-```
-
-con los valores reales que copiaste.
-
----
-
-## Paso 3 — Configurar reglas de Firebase (IMPORTANTE)
-
-### Firestore rules
-En Firebase Console → Firestore → pestaña **Reglas** → pega esto:
+**Firestore → pestaña Reglas:**
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+
+    // Perfiles de usuario: cualquiera autenticado puede LEER (para la lista de
+    // contactos), pero solo el dueño puede escribir el suyo.
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Chats: solo los dos participantes pueden leer/escribir el chat y sus mensajes.
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null &&
+        request.auth.uid in resource.data.participants;
+      allow create: if request.auth != null &&
+        request.auth.uid in request.resource.data.participants;
+
+      match /messages/{msgId} {
+        allow read: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow create: if request.auth != null &&
+          request.auth.uid == request.resource.data.senderId &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      }
     }
   }
 }
 ```
-*(Esto es para uso personal. Si quieres más seguridad, agrega autenticación.)*
 
-### Storage rules
-En Firebase Console → Storage → pestaña **Reglas** → pega esto:
+**Storage → pestaña Reglas:**
 ```
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if true;
+    // Fotos de perfil: cualquiera autenticado puede ver, solo el dueño sube la suya.
+    match /users/{uid}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+    // Archivos de chat: solo usuarios autenticados (validado además por Firestore).
+    match /chats/{chatId}/{allPaths=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
 ```
 
----
+## 4. Publicar (para usarlo desde laptop y celular)
 
-## Paso 4 — Subir a GitHub y activar GitHub Pages
+**Opción rápida — GitHub Pages:**
+1. Sube la carpeta a un repositorio de GitHub.
+2. Settings → Pages → Source: rama `main` / raíz.
+3. Tu chat estará en `https://TUUSUARIO.github.io/TUREPOSITORIO/`.
+4. Abre ese mismo link en tu laptop y en tu celular — cada dispositivo mantiene
+   su propia sesión, y los mensajes se sincronizan en tiempo real vía Firebase.
 
-1. Sube todos los archivos a tu repositorio
-2. En GitHub → Settings → Pages → Source: **main branch / root**
-3. Tu app estará en: `https://TUUSUARIO.github.io/TUREPOSITORIO/`
+**Opción alterna:** Netlify, Vercel o Firebase Hosting (arrastra la carpeta).
 
----
+## 5. Uso
 
-## Comandos disponibles en la terminal
-| Comando    | Acción |
-|------------|--------|
-| `creador`  | Abre el panel de administración |
-| `boveda`   | Archivos de texto |
-| `galeria`  | Imágenes y videos |
-| `audio`    | Reproductor de música |
-| `notas`    | Bitácora personal |
-| `objetivos`| Lista de objetivos |
-| `hora`     | Hora actual |
-| `fecha`    | Fecha actual |
-| `version`  | Versión del sistema |
-| `sys`      | Estado del sistema |
-| `clear`    | Limpiar terminal |
-| `centinela`| Activar/desactivar bloqueo por inactividad |
-| `error`    | Protocolo de pánico |
-| `ayuda`    | Lista completa |
+- **Crear cuenta**: nombre completo, apodo único, contraseña, foto opcional.
+- **Iniciar sesión**: con tu apodo + contraseña (cada cuenta es privada e independiente).
+- **Lista de contactos**: todos los usuarios registrados, con punto verde si están
+  en línea o "últ. vez hace X" si no.
+- **Chat**: texto, 📎 para foto/video, 🎤 para grabar audio (mantén, detén, envía).
+- **Responder**: pasa el mouse/toca un mensaje → ↩ para citarlo en tu respuesta.
+- **Perfil**: toca tu avatar (arriba a la izquierda) para ver/cambiar tu foto,
+  o el avatar del contacto en el chat para ver el suyo.
 
----
+## Notas
 
-## Clave de cifrado
-La clave para acceder a archivos encriptados es: **404**
+- El estado "en línea" se calcula por actividad reciente (heartbeat cada 15s).
+- Los mensajes, fotos, videos y audios se guardan en Firestore + Storage, por lo
+  que persisten y se sincronizan entre todos tus dispositivos.
+- La capa gratuita (Spark) de Firebase es más que suficiente para uso personal.
+

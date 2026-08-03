@@ -79,6 +79,7 @@
             <div class="sc-me-apodo" id="me-apodo">—</div>
           </div>
         </div>
+        <button class="ic-btn" title="Apariencia" onclick="openSettings()">⚙</button>
         <button class="ic-btn" title="Cerrar sesión" onclick="doLogout()">⏻</button>
       </div>
       <div class="sc-search">
@@ -106,11 +107,27 @@
             </div>
           </div>
           <button class="ic-btn" title="Buscar en este chat" onclick="toggleSearch()">🔍</button>
+          <div class="ghost-wrap">
+            <button class="ic-btn" id="ghost-btn" title="Modo Fantasma" onclick="toggleGhostMenu()">👻</button>
+            <div id="ghost-menu" class="ghost-menu hidden">
+              <div class="ghost-menu-title">MODO FANTASMA</div>
+              <button data-mode="permanente" onclick="setGhostMode('permanente')">Permanente</button>
+              <button data-mode="salir" onclick="setGhostMode('salir')">Al salir del chat</button>
+              <button data-mode="10m" onclick="setGhostMode('10m')">10 minutos</button>
+              <button data-mode="1h" onclick="setGhostMode('1h')">1 hora</button>
+              <button data-mode="2h" onclick="setGhostMode('2h')">2 horas</button>
+            </div>
+          </div>
         </div>
 
         <div id="search-bar" class="search-bar hidden">
           <input type="text" id="search-input" placeholder="Buscar en este chat..." oninput="filterMessages()">
           <button class="ic-btn" onclick="toggleSearch()">✕</button>
+        </div>
+
+        <div id="ghost-indicator" class="ghost-indicator hidden">
+          <span>👻 MODO FANTASMA ACTIVADO</span>
+          <span id="ghost-indicator-detail" class="ghost-indicator-detail"></span>
         </div>
 
         <div id="messages" class="messages"></div>
@@ -140,7 +157,7 @@
           </div>
           <input type="file" id="file-image" accept="image/*" class="hidden" onchange="sendFile(this,'image')">
           <input type="file" id="file-video" accept="video/*" class="hidden" onchange="sendFile(this,'video')">
-          <button class="ic-btn" id="viewonce-btn" title="Enviar próxima foto/video para verse una sola vez" onclick="toggleViewOnceMode()">🔥</button>
+          <button class="ic-btn" id="camera-btn" title="Cámara rápida" onclick="openQuickCamera()">📷</button>
           <input type="text" id="msg-input" placeholder="Escribe un mensaje..." autocomplete="off">
           <button class="ic-btn" id="mic-btn" onclick="startRecording()">🎤</button>
           <button class="ic-btn send-btn" id="send-btn" onclick="sendText()">➤</button>
@@ -173,6 +190,77 @@
   <div class="lb-inner" onclick="event.stopPropagation()">
     <button class="lb-close" onclick="closeLightbox()">×</button>
     <div id="lb-media"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ CÁMARA RÁPIDA ═══════════════ -->
+<div id="camera-overlay" class="cam-overlay hidden">
+  <div class="cam-top">
+    <button class="ic-btn cam-close" onclick="closeQuickCamera()">✕</button>
+    <span id="cam-rec-time" class="cam-rec-time hidden">● 00:00</span>
+    <button class="ic-btn cam-flip" id="cam-flip-btn" onclick="flipCamera()">🔄</button>
+  </div>
+  <div class="cam-video-wrap">
+    <video id="cam-video" autoplay playsinline muted></video>
+  </div>
+  <div class="cam-controls">
+    <button class="cam-shutter" id="cam-shutter" title="Mantén presionado para grabar video"></button>
+    <span class="cam-hint">Toca: foto · Mantén presionado: video</span>
+  </div>
+</div>
+
+<!-- ═══════════════ VISTA PREVIA ANTES DE ENVIAR ═══════════════ -->
+<div id="preview-overlay" class="cam-overlay hidden">
+  <div class="cam-top">
+    <button class="ic-btn cam-close" onclick="cancelCapturePreview()">✕</button>
+    <span class="cam-hint">Vista previa</span>
+    <span style="width:36px"></span>
+  </div>
+  <div class="cam-video-wrap" id="preview-media-wrap"></div>
+  <div class="preview-controls">
+    <div class="preview-modes" id="preview-modes">
+      <label class="preview-mode-opt">
+        <input type="radio" name="preview-mode" value="permanente" checked onchange="setPreviewMode('permanente')">
+        <span>Permanente</span>
+      </label>
+      <label class="preview-mode-opt">
+        <input type="radio" name="preview-mode" value="once" onchange="setPreviewMode('once')">
+        <span>🔥 Ver 1 vez</span>
+      </label>
+      <label class="preview-mode-opt">
+        <input type="radio" name="preview-mode" value="twice" onchange="setPreviewMode('twice')">
+        <span>👁👁 Ver 2 veces</span>
+      </label>
+    </div>
+    <div class="preview-actions">
+      <button class="pbtn preview-cancel" onclick="cancelCapturePreview()">Cancelar</button>
+      <button class="pbtn preview-send" onclick="sendCapturePreview()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ AJUSTES: APARIENCIA / TEMAS ═══════════════ -->
+<div id="settings-overlay" class="overlay" onclick="closeSettings()">
+  <div class="settings-card" onclick="event.stopPropagation()">
+    <button class="lb-close" onclick="closeSettings()">×</button>
+    <div class="settings-title">APARIENCIA</div>
+
+    <div class="settings-section">
+      <div class="settings-sub">Tema</div>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-sub">Color de mis burbujas</div>
+      <div class="bubble-row" id="bubble-me-row"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-sub">Color de burbujas recibidas</div>
+      <div class="bubble-row" id="bubble-them-row"></div>
+    </div>
+
+    <button class="pbtn settings-reset" onclick="resetAppearance()">Restaurar valores originales</button>
   </div>
 </div>
 

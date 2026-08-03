@@ -795,6 +795,7 @@ function stopAndSendRecording(){
 // ─────────────────────────────────────────────
 async function openQuickCamera(){
   if(!activeChatId) return;
+  document.getElementById('camera-overlay').classList.remove('hidden');
   document.getElementById('camera-overlay').classList.add('on');
   await startCamStream();
   bindShutterEvents();
@@ -823,6 +824,7 @@ function closeQuickCamera(){
   if(camRecording) stopCamRecording(true);
   stopCamStream();
   document.getElementById('camera-overlay').classList.remove('on');
+  document.getElementById('camera-overlay').classList.add('hidden');
   document.getElementById('cam-rec-time').classList.add('hidden');
 }
 
@@ -907,6 +909,8 @@ function showCapturePreview(blob, type){
   document.querySelectorAll('input[name="preview-mode"]').forEach(r=>{ r.checked = r.value==='permanente'; });
   stopCamStream();
   document.getElementById('camera-overlay').classList.remove('on');
+  document.getElementById('camera-overlay').classList.add('hidden');
+  document.getElementById('preview-overlay').classList.remove('hidden');
   document.getElementById('preview-overlay').classList.add('on');
 }
 function setPreviewMode(mode){ previewMode = mode; }
@@ -915,6 +919,7 @@ function cancelCapturePreview(){
   if(capturedUrl){ URL.revokeObjectURL(capturedUrl); capturedUrl=null; }
   document.getElementById('preview-media-wrap').innerHTML='';
   document.getElementById('preview-overlay').classList.remove('on');
+  document.getElementById('preview-overlay').classList.add('hidden');
 }
 async function sendCapturePreview(){
   if(!capturedBlob || !activeChatId) return;

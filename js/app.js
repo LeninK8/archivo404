@@ -5,8 +5,8 @@
 //  (Firebase Storage fue eliminado por completo del proyecto.)
 // ════════════════════════════════════════════════════════════
 import {
-  db, doc, setDoc, getDoc, updateDoc, collection,
-  query, orderBy, onSnapshot, serverTimestamp, addDoc, limit,
+  db, doc, setDoc, getDoc, updateDoc, deleteDoc, collection,
+  query, where, orderBy, onSnapshot, serverTimestamp, addDoc, limit, getDocs, increment,
   apodoToUid, chatIdFor, hashPassword
 } from './firebase.js';
 import { uploadToCloudinary } from './cloudinary.js';
@@ -27,13 +27,43 @@ let regPhotoFile = null;
 let presenceInterval = null, statusRefreshInterval = null;
 let mediaRecorder = null, recordedChunks = [], recStream = null, recTimer = null, recSeconds = 0;
 let msgById = {};
-let viewOnceMode = false;
 let chatDocUnsub = null;
 let otherIsTyping = false;
 let typingDebounce = null;
 let searchOpen = false;
 let reactingMsg = null;
 const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
+
+// ─────────────────────────────────────────────
+// ESTADO: CÁMARA RÁPIDA / VISTA PREVIA
+// ─────────────────────────────────────────────
+let camStream = null;
+let camFacing = 'environment';
+let camRecorder = null, camChunks = [], camRecording = false, camPressTimer = null;
+let capturedBlob = null, capturedType = null, capturedUrl = null;
+let previewMode = 'permanente';
+let ghostExpireTimers = {};
+let ghostTickInterval = null;
+
+// ─────────────────────────────────────────────
+// ESTADO: MODO FANTASMA (por chat activo)
+// ─────────────────────────────────────────────
+let currentGhostMode = { type:'permanente' };
+
+// ─────────────────────────────────────────────
+// APARIENCIA: TEMAS Y COLOR DE BURBUJAS
+// ─────────────────────────────────────────────
+const THEMES = {
+  dorado: { '--bg':'#030201','--bg2':'#0a0805','--bg3':'#100c07','--bg4':'#171009','--acc':'#d4af37','--acc2':'#e8c874','--acc3':'#c9a227','--acc4':'#b08d57','--fg':'#ece4d3','--fg2':'#a89878','--fg3':'#4a4030','--border':'#241f16','--border2':'#362c1c','--bubble-me':'#1c1509','--bubble-them':'#100d08' },
+  oscuro: { '--bg':'#0b0b0d','--bg2':'#141416','--bg3':'#1b1b1e','--bg4':'#232326','--acc':'#c7c9cf','--acc2':'#e6e7ea','--acc3':'#9a9ca3','--acc4':'#7a7c82','--fg':'#eceef2','--fg2':'#a2a4ab','--fg3':'#5a5c63','--border':'#232326','--border2':'#33343a','--bubble-me':'#1e2024','--bubble-them':'#18191c' },
+  claro:  { '--bg':'#f4efe4','--bg2':'#ffffff','--bg3':'#eee7d7','--bg4':'#e4dcc7','--acc':'#a8792f','--acc2':'#c79b4e','--acc3':'#8f6420','--acc4':'#7a5719','--fg':'#241f16','--fg2':'#5a4f3c','--fg3':'#8a7f68','--border':'#ddd3ba','--border2':'#cabf9f','--bubble-me':'#f0e2bd','--bubble-them':'#ffffff' },
+  azul:   { '--bg':'#040609','--bg2':'#0a0e15','--bg3':'#10151f','--bg4':'#161d2b','--acc':'#4d9bf5','--acc2':'#7fb8fa','--acc3':'#2f7ad1','--acc4':'#2a5f9e','--fg':'#e4ecf7','--fg2':'#8fa2bd','--fg3':'#3c4d63','--border':'#16202f','--border2':'#233247','--bubble-me':'#0e1c30','--bubble-them':'#0d121a' },
+  verde:  { '--bg':'#050904','--bg2':'#0b120a','--bg3':'#111a0f','--bg4':'#182417','--acc':'#5fc76b','--acc2':'#8fdd97','--acc3':'#3fa84d','--acc4':'#328a3e','--fg':'#e6f2e5','--fg2':'#93b090','--fg3':'#3e5a3c','--border':'#17241a','--border2':'#243824','--bubble-me':'#122417','--bubble-them':'#0e1610' },
+  morado: { '--bg':'#08050c','--bg2':'#110b18','--bg3':'#181022','--bg4':'#20172d','--acc':'#a675e0','--acc2':'#c39ded','--acc3':'#8850c9','--acc4':'#6c3fa1','--fg':'#ece4f7','--fg2':'#a591bf','--fg3':'#4c3d63','--border':'#20172d','--border2':'#30203f','--bubble-me':'#1e1329','--bubble-them':'#160f1f' },
+  rojo:   { '--bg':'#0a0403','--bg2':'#160807','--bg3':'#1e0b09','--bg4':'#2a100d','--acc':'#e05d4d','--acc2':'#f18e78','--acc3':'#c33f2e','--acc4':'#9c3123','--fg':'#f5e5e1','--fg2':'#bf938a','--fg3':'#63382f','--border':'#2a100d','--border2':'#3d1712','--bubble-me':'#291310','--bubble-them':'#1c0d0a' }
+};
+const THEME_LABELS = { dorado:'Dorado', oscuro:'Oscuro', claro:'Claro', azul:'Azul', verde:'Verde', morado:'Morado', rojo:'Rojo' };
+const BUBBLE_PRESETS = ['#1c1509','#100d08','#0e1c30','#122417','#1e1329','#291310','#2a2a2a','#ffffff'];
 
 // ─────────────────────────────────────────────
 // BOOT
@@ -165,8 +195,10 @@ async function doLogin(){
 }
 
 async function doLogout(){
+  if(activeChatId && me) await markChatPresence(activeChatId, me.uid, false);
   try{ if(me) await updateDoc(doc(db,'users',me.uid), { lastSeen: Date.now(), online:false }); }catch(e){}
   clearInterval(presenceInterval); clearInterval(statusRefreshInterval);
+  if(ghostTickInterval){ clearInterval(ghostTickInterval); ghostTickInterval=null; }
   if(usersUnsub) usersUnsub();
   if(messagesUnsub) messagesUnsub();
   if(chatDocUnsub) chatDocUnsub();
@@ -185,8 +217,14 @@ function startApp(){
   document.getElementById('me-name').textContent = me.nombre;
   document.getElementById('me-apodo').textContent = '@'+me.apodo;
   document.getElementById('me-avatar').src = avatarSrc(me);
+  applyAppearance(me);
   setupPresence();
   listenUsers();
+  setupScreenshotDetection();
+  if(!ghostTickInterval) ghostTickInterval = setInterval(tickGhostExpirations, 5000);
+  window.addEventListener('beforeunload', ()=>{
+    if(activeChatId) markChatPresence(activeChatId, me.uid, false);
+  });
 }
 
 function setupPresence(){
@@ -265,6 +303,10 @@ function renderContacts(){
 // CHAT — abrir / navegar
 // ─────────────────────────────────────────────
 function openChatWith(uid){
+  const prevChatId = activeChatId;
+  if(prevChatId && prevChatId !== chatIdFor(me.uid, uid)){
+    markChatPresence(prevChatId, me.uid, false);
+  }
   activeChatUid = uid;
   activeChatId = chatIdFor(me.uid, uid);
   document.getElementById('chat-empty').classList.add('hidden');
@@ -273,13 +315,19 @@ function openChatWith(uid){
   cancelReply();
   searchOpen = false;
   document.getElementById('search-bar')?.classList.add('hidden');
+  document.getElementById('ghost-menu')?.classList.add('hidden');
   otherIsTyping = false;
+  currentGhostMode = { type:'permanente' };
   updateActiveChatHeader();
   listenMessages();
   listenChatDoc();
+  markChatPresence(activeChatId, me.uid, true);
   renderContacts();
 }
-function backToList(){ document.body.classList.remove('chat-open'); }
+function backToList(){
+  document.body.classList.remove('chat-open');
+  if(activeChatId) markChatPresence(activeChatId, me.uid, false);
+}
 
 function listenChatDoc(){
   if(chatDocUnsub) chatDocUnsub();
@@ -289,6 +337,69 @@ function listenChatDoc(){
     const ts = typingMap[activeChatUid];
     otherIsTyping = !!ts && (Date.now()-ts) < 4000;
     updateActiveChatHeader();
+    currentGhostMode = (data && data.ghostMode) ? data.ghostMode : { type:'permanente' };
+    updateGhostUI();
+  });
+}
+
+// ─────────────────────────────────────────────
+// MODO FANTASMA
+// ─────────────────────────────────────────────
+const GHOST_LABELS = { permanente:'', salir:'Al salir del chat', '10m':'10 minutos', '1h':'1 hora', '2h':'2 horas' };
+const GHOST_MS = { '10m':10*60*1000, '1h':60*60*1000, '2h':2*60*60*1000 };
+
+function toggleGhostMenu(){
+  document.getElementById('ghost-menu').classList.toggle('hidden');
+}
+async function setGhostMode(type){
+  document.getElementById('ghost-menu').classList.add('hidden');
+  if(!activeChatId) return;
+  currentGhostMode = { type, setAt: Date.now() };
+  try{
+    await setDoc(doc(db,'chats',activeChatId), { ghostMode: currentGhostMode }, { merge:true });
+  }catch(e){ toast('Error al activar modo fantasma: '+e.message,'err'); }
+  updateGhostUI();
+  toast(type==='permanente' ? 'Modo Fantasma desactivado' : '👻 Modo Fantasma activado: '+GHOST_LABELS[type]);
+}
+function updateGhostUI(){
+  const btn = document.getElementById('ghost-btn');
+  const on = currentGhostMode && currentGhostMode.type && currentGhostMode.type!=='permanente';
+  btn?.classList.toggle('act', !!on);
+  document.querySelectorAll('#ghost-menu button').forEach(b=>{
+    b.classList.toggle('act', b.dataset.mode === (currentGhostMode?.type||'permanente'));
+  });
+  const ind = document.getElementById('ghost-indicator');
+  if(!ind) return;
+  ind.classList.toggle('hidden', !on);
+  document.getElementById('ghost-indicator-detail').textContent = on ? '· '+GHOST_LABELS[currentGhostMode.type] : '';
+}
+
+async function markChatPresence(chatId, uid, present){
+  try{
+    await setDoc(doc(db,'chats',chatId), { presence:{ [uid]: present } }, { merge:true });
+    if(!present) await maybeCleanupGhostOnExit(chatId);
+  }catch(e){}
+}
+async function maybeCleanupGhostOnExit(chatId){
+  try{
+    const snap = await getDoc(doc(db,'chats',chatId));
+    const data = snap.data(); if(!data) return;
+    const presence = data.presence || {};
+    const participants = data.participants || [];
+    const anyoneInside = participants.some(uid=> presence[uid]===true);
+    if(anyoneInside) return;
+    const q = query(collection(db,'chats',chatId,'messages'), where('ghostType','==','salir'));
+    const msnap = await getDocs(q);
+    msnap.forEach(d=>{ deleteDoc(doc(db,'chats',chatId,'messages',d.id)).catch(()=>{}); });
+  }catch(e){}
+}
+function tickGhostExpirations(){
+  if(!activeChatId) return;
+  const now = Date.now();
+  Object.values(msgById).forEach(m=>{
+    if(m.expireAt && m.expireAt <= now){
+      deleteDoc(doc(db,'chats',activeChatId,'messages',m.id)).catch(()=>{});
+    }
   });
 }
 
@@ -396,6 +507,16 @@ function renderMessageEl(m){
         }else{
           inner += `<div class="vo-lock" data-openonce="${m.id}"><span class="vo-lock-i">🔥</span><span class="vo-lock-t">Toca para ver — solo una vez</span></div>`;
         }
+      }else if(m.viewTwice){
+        const count = m.viewCount||0;
+        if(count>=2){
+          inner += `<div class="vt-seen">👁👁 ${m.type==='image'?'Foto':'Video'} expirada</div>`;
+        }else if(mine){
+          inner += `<div class="vo-wrap"><span class="vo-badge">👁👁 VER 2 VECES</span>
+            <div class="vo-lock"><span class="vo-lock-i">${m.type==='image'?'📷':'🎬'}</span><span class="vo-lock-t">Enviada — se verá 2 veces (${count}/2)</span></div></div>`;
+        }else{
+          inner += `<div class="vo-lock" data-opentwice="${m.id}"><span class="vo-lock-i">👁👁</span><span class="vo-lock-t">Toca para ver — quedan ${2-count} vez(es)</span></div>`;
+        }
       }else if(m.type==='image'){
         inner += `<img class="msg-img" src="${m.mediaUrl}" data-view="${m.mediaUrl}" data-vtype="image">`;
       }else{
@@ -441,6 +562,8 @@ function renderMessageEl(m){
   if(quote) quote.onclick = ()=> scrollToMessage(quote.dataset.jump);
   const voLock = wrap.querySelector('[data-openonce]');
   if(voLock) voLock.onclick = ()=> openViewOnce(m);
+  const vtLock = wrap.querySelector('[data-opentwice]');
+  if(vtLock) vtLock.onclick = ()=> openViewTwice(m);
   wrap.querySelectorAll('.reaction-pill').forEach(p=>{
     p.onclick = ()=> toggleReaction(m, p.dataset.emoji);
   });
@@ -496,19 +619,22 @@ async function openViewOnce(m){
   }catch(e){ toast('Error al marcar como visto: '+e.message,'err'); }
 }
 
+async function openViewTwice(m){
+  openLightboxUrl(m.mediaUrl, m.type);
+  try{
+    await updateDoc(doc(db,'chats',activeChatId,'messages',m.id), {
+      viewCount: increment(1), openedBy: me.uid
+    });
+  }catch(e){ toast('Error al marcar como visto: '+e.message,'err'); }
+}
+
 async function deleteMessage(id){
   if(!confirm('¿Eliminar este mensaje? Esta acción no se puede deshacer.')) return;
   try{
     await updateDoc(doc(db,'chats',activeChatId,'messages',id), {
-      deleted:true, text:null, mediaUrl:null, viewOnce:false
+      deleted:true, text:null, mediaUrl:null, viewOnce:false, viewTwice:false
     });
   }catch(e){ toast('Error al eliminar: '+e.message,'err'); }
-}
-
-function toggleViewOnceMode(){
-  viewOnceMode = !viewOnceMode;
-  document.getElementById('viewonce-btn').classList.toggle('act', viewOnceMode);
-  toast(viewOnceMode ? '🔥 La próxima foto/video se enviará para verse una sola vez' : 'Modo "ver una vez" desactivado');
 }
 
 function scrollToMessage(id){
@@ -543,6 +669,11 @@ async function sendMessage(payload){
     deleted: false
   };
   if(payload.viewOnce){ data.viewOnce = true; data.opened = false; }
+  if(payload.viewTwice){ data.viewTwice = true; data.viewCount = 0; }
+  if(currentGhostMode && currentGhostMode.type && currentGhostMode.type!=='permanente'){
+    data.ghostType = currentGhostMode.type;
+    if(GHOST_MS[currentGhostMode.type]) data.expireAt = Date.now() + GHOST_MS[currentGhostMode.type];
+  }
   await addDoc(collection(db,'chats',activeChatId,'messages'), data);
   await setDoc(doc(db,'chats',activeChatId), {
     participants: [me.uid, activeChatUid],
@@ -599,17 +730,13 @@ function triggerFile(type){
 async function sendFile(input, type){
   const file = input.files[0]; if(!file || !activeChatId) return;
   input.value='';
-  const asViewOnce = viewOnceMode;
-  if(viewOnceMode){ viewOnceMode=false; document.getElementById('viewonce-btn').classList.remove('act'); }
   toast('Subiendo '+(type==='image'?'imagen':'video')+' a Cloudinary...','ok');
   try{
     const toUpload = type==='image' ? await compressImage(file) : file;
     const mediaUrl = type==='image'
       ? await uploadToCloudinary(toUpload, 'foto_'+Date.now()+'.jpg')
       : await uploadToCloudinary(toUpload);
-    const payload = { type, mediaUrl };
-    if(asViewOnce){ payload.viewOnce = true; payload.opened = false; }
-    await sendMessage(payload);
+    await sendMessage({ type, mediaUrl });
   }catch(e){ toast('Error al subir archivo: '+e.message,'err'); }
 }
 
@@ -664,6 +791,150 @@ function stopAndSendRecording(){
 }
 
 // ─────────────────────────────────────────────
+// CÁMARA RÁPIDA (captura directa, sin explorador de archivos)
+// ─────────────────────────────────────────────
+async function openQuickCamera(){
+  if(!activeChatId) return;
+  document.getElementById('camera-overlay').classList.add('on');
+  await startCamStream();
+  bindShutterEvents();
+}
+async function startCamStream(){
+  stopCamStream();
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: camFacing }, audio: true
+    });
+  }catch(e){
+    try{ camStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true }); }
+    catch(e2){ toast('No se pudo acceder a la cámara','err'); closeQuickCamera(); return; }
+  }
+  const video = document.getElementById('cam-video');
+  video.srcObject = camStream;
+}
+function stopCamStream(){
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+}
+async function flipCamera(){
+  camFacing = camFacing==='environment' ? 'user' : 'environment';
+  await startCamStream();
+}
+function closeQuickCamera(){
+  if(camRecording) stopCamRecording(true);
+  stopCamStream();
+  document.getElementById('camera-overlay').classList.remove('on');
+  document.getElementById('cam-rec-time').classList.add('hidden');
+}
+
+let camRecSeconds = 0, camRecTimerInt = null;
+function bindShutterEvents(){
+  const btn = document.getElementById('cam-shutter');
+  if(btn.dataset.bound) return;
+  btn.dataset.bound = '1';
+  const onDown = (e)=>{
+    e.preventDefault();
+    camPressTimer = setTimeout(()=> startCamRecording(), 350);
+  };
+  const onUp = (e)=>{
+    e.preventDefault();
+    if(camPressTimer){ clearTimeout(camPressTimer); camPressTimer=null; }
+    if(camRecording) stopCamRecording(false);
+    else if(!camRecording && !btn.dataset.justRecorded) takePhoto();
+    btn.dataset.justRecorded = '';
+  };
+  btn.addEventListener('pointerdown', onDown);
+  btn.addEventListener('pointerup', onUp);
+  btn.addEventListener('pointerleave', ()=>{ if(camPressTimer){ clearTimeout(camPressTimer); camPressTimer=null; } });
+}
+function takePhoto(){
+  const video = document.getElementById('cam-video');
+  if(!video.videoWidth) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  canvas.toBlob(blob=>{
+    if(!blob) return;
+    showCapturePreview(blob, 'image');
+  }, 'image/jpeg', .9);
+}
+function startCamRecording(){
+  if(!camStream) return;
+  camRecording = true;
+  document.getElementById('cam-shutter').classList.add('recording');
+  document.getElementById('cam-shutter').dataset.justRecorded = '1';
+  camChunks = [];
+  try{
+    camRecorder = new MediaRecorder(camStream);
+  }catch(e){ camRecording=false; return; }
+  camRecorder.ondataavailable = e=>{ if(e.data.size>0) camChunks.push(e.data); };
+  camRecorder.start();
+  camRecSeconds = 0;
+  const timeEl = document.getElementById('cam-rec-time');
+  timeEl.classList.remove('hidden');
+  timeEl.textContent = '● 00:00';
+  camRecTimerInt = setInterval(()=>{
+    camRecSeconds++;
+    const m=String(Math.floor(camRecSeconds/60)).padStart(2,'0'), s=String(camRecSeconds%60).padStart(2,'0');
+    timeEl.textContent = `● ${m}:${s}`;
+  },1000);
+}
+function stopCamRecording(discard){
+  if(!camRecorder || camRecorder.state==='inactive') return;
+  clearInterval(camRecTimerInt);
+  document.getElementById('cam-shutter').classList.remove('recording');
+  document.getElementById('cam-rec-time').classList.add('hidden');
+  camRecorder.onstop = ()=>{
+    camRecording = false;
+    if(discard || !camChunks.length) return;
+    const blob = new Blob(camChunks, { type:'video/webm' });
+    showCapturePreview(blob, 'video');
+  };
+  camRecorder.stop();
+}
+
+// ─────────────────────────────────────────────
+// VISTA PREVIA ANTES DE ENVIAR (foto/video de cámara rápida)
+// ─────────────────────────────────────────────
+function showCapturePreview(blob, type){
+  capturedBlob = blob; capturedType = type;
+  if(capturedUrl) URL.revokeObjectURL(capturedUrl);
+  capturedUrl = URL.createObjectURL(blob);
+  const wrap = document.getElementById('preview-media-wrap');
+  wrap.innerHTML = type==='image'
+    ? `<img src="${capturedUrl}">`
+    : `<video src="${capturedUrl}" controls autoplay loop></video>`;
+  previewMode = 'permanente';
+  document.querySelectorAll('input[name="preview-mode"]').forEach(r=>{ r.checked = r.value==='permanente'; });
+  stopCamStream();
+  document.getElementById('camera-overlay').classList.remove('on');
+  document.getElementById('preview-overlay').classList.add('on');
+}
+function setPreviewMode(mode){ previewMode = mode; }
+function cancelCapturePreview(){
+  capturedBlob = null; capturedType = null;
+  if(capturedUrl){ URL.revokeObjectURL(capturedUrl); capturedUrl=null; }
+  document.getElementById('preview-media-wrap').innerHTML='';
+  document.getElementById('preview-overlay').classList.remove('on');
+}
+async function sendCapturePreview(){
+  if(!capturedBlob || !activeChatId) return;
+  const blob = capturedBlob, type = capturedType, mode = previewMode;
+  cancelCapturePreview();
+  toast('Subiendo '+(type==='image'?'foto':'video')+' a Cloudinary...','ok');
+  try{
+    const toUpload = type==='image' ? await compressImage(blob) : blob;
+    const mediaUrl = type==='image'
+      ? await uploadToCloudinary(toUpload, 'foto_'+Date.now()+'.jpg')
+      : await uploadToCloudinary(toUpload, 'video_'+Date.now()+'.webm');
+    const payload = { type, mediaUrl };
+    if(mode==='once'){ payload.viewOnce = true; }
+    else if(mode==='twice'){ payload.viewTwice = true; }
+    await sendMessage(payload);
+  }catch(e){ toast('Error al subir archivo: '+e.message,'err'); }
+}
+
+
+// ─────────────────────────────────────────────
 // PERFIL
 // ─────────────────────────────────────────────
 function openProfile(which){
@@ -712,6 +983,103 @@ function closeLightbox(){
 }
 
 // ─────────────────────────────────────────────
+// CAPTURA DE PANTALLA (mejor esfuerzo — la mayoría de navegadores
+// no exponen una API para detectarla; se deja el código preparado
+// para plataformas/apps nativas que sí lo permitan en el futuro).
+// ─────────────────────────────────────────────
+function setupScreenshotDetection(){
+  // Atajo de teclado (Windows/Linux desktop) — mejor esfuerzo, no 100% fiable.
+  document.addEventListener('keyup', (e)=>{
+    if(e.key==='PrintScreen') notifyScreenshotTaken();
+  });
+  // Punto de extensión: si la plataforma (app nativa / wrapper) expone un
+  // evento o API para detectar capturas, puede llamar a esta función:
+  window.a404OnScreenshotDetected = notifyScreenshotTaken;
+}
+async function notifyScreenshotTaken(){
+  if(!activeChatId || !me) return;
+  try{
+    await sendMessage({ type:'text', text: '⚠️ '+me.nombre+' realizó una captura de pantalla.' });
+  }catch(e){}
+}
+
+// ─────────────────────────────────────────────
+// APARIENCIA: TEMAS Y COLOR DE BURBUJAS
+// (Solo visual, por usuario — no afecta a los demás participantes.)
+// ─────────────────────────────────────────────
+function applyAppearance(profile){
+  const themeName = (profile && THEMES[profile.theme]) ? profile.theme : 'dorado';
+  const vars = THEMES[themeName];
+  const root = document.documentElement.style;
+  Object.entries(vars).forEach(([k,v])=> root.setProperty(k, v));
+  if(profile && profile.bubbleMe) root.setProperty('--bubble-me', profile.bubbleMe);
+  if(profile && profile.bubbleThem) root.setProperty('--bubble-them', profile.bubbleThem);
+}
+
+function openSettings(){
+  renderThemeGrid();
+  renderBubbleRow('bubble-me-row', 'bubbleMe');
+  renderBubbleRow('bubble-them-row', 'bubbleThem');
+  document.getElementById('settings-overlay').classList.add('on');
+}
+function closeSettings(){ document.getElementById('settings-overlay').classList.remove('on'); }
+
+function renderThemeGrid(){
+  const grid = document.getElementById('theme-grid');
+  const active = (me && me.theme) || 'dorado';
+  grid.innerHTML = Object.keys(THEMES).map(name=>{
+    const v = THEMES[name];
+    return `<div class="theme-item">
+      <div class="theme-swatch${name===active?' act':''}" data-theme="${name}"
+        style="background:linear-gradient(135deg, ${v['--bg2']} 50%, ${v['--acc']} 50%)">
+        ${name===active?'<span class="theme-swatch-check">✓</span>':''}
+      </div>
+      <span class="theme-swatch-label">${THEME_LABELS[name]}</span>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.theme-swatch').forEach(el=>{
+    el.onclick = ()=> selectTheme(el.dataset.theme);
+  });
+}
+async function selectTheme(name){
+  if(!THEMES[name]) return;
+  me.theme = name;
+  applyAppearance(me);
+  renderThemeGrid();
+  try{ await updateDoc(doc(db,'users',me.uid), { theme: name }); }
+  catch(e){ toast('Error al guardar el tema: '+e.message,'err'); }
+}
+function renderBubbleRow(containerId, field){
+  const row = document.getElementById(containerId);
+  const active = me ? me[field] : null;
+  row.innerHTML = BUBBLE_PRESETS.map(c=>
+    `<div class="bubble-swatch${active===c?' act':''}" data-color="${c}" style="background:${c}"></div>`
+  ).join('') + `<input type="color" class="bubble-custom-input" title="Color personalizado" value="${active||'#1c1509'}">`;
+  row.querySelectorAll('.bubble-swatch').forEach(el=>{
+    el.onclick = ()=> selectBubbleColor(field, el.dataset.color);
+  });
+  const custom = row.querySelector('.bubble-custom-input');
+  custom.oninput = ()=> selectBubbleColor(field, custom.value);
+}
+async function selectBubbleColor(field, color){
+  me[field] = color;
+  applyAppearance(me);
+  renderBubbleRow(field==='bubbleMe' ? 'bubble-me-row' : 'bubble-them-row', field);
+  try{ await updateDoc(doc(db,'users',me.uid), { [field]: color }); }
+  catch(e){ toast('Error al guardar el color: '+e.message,'err'); }
+}
+async function resetAppearance(){
+  me.theme = 'dorado'; me.bubbleMe = null; me.bubbleThem = null;
+  applyAppearance(me);
+  renderThemeGrid();
+  renderBubbleRow('bubble-me-row','bubbleMe');
+  renderBubbleRow('bubble-them-row','bubbleThem');
+  try{ await updateDoc(doc(db,'users',me.uid), { theme:'dorado', bubbleMe:null, bubbleThem:null }); }
+  catch(e){ toast('Error al restaurar: '+e.message,'err'); }
+  toast('Apariencia restaurada a los valores originales','ok');
+}
+
+// ─────────────────────────────────────────────
 // UTILS
 // ─────────────────────────────────────────────
 function toast(msg,type=''){
@@ -749,6 +1117,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
         picker.classList.add('hidden');
       }
     }
+    const ghostMenu = document.getElementById('ghost-menu');
+    if(ghostMenu && !ghostMenu.classList.contains('hidden')){
+      if(!ghostMenu.contains(e.target) && !e.target.closest('#ghost-btn')){
+        ghostMenu.classList.add('hidden');
+      }
+    }
   });
 });
 
@@ -761,6 +1135,10 @@ Object.assign(window, {
   startRecording, cancelRecording, stopAndSendRecording,
   openProfile, closeProfile, uploadMyPhoto,
   openLightboxUrl, closeLightbox, cancelReply, renderContacts,
-  toggleViewOnceMode, deleteMessage, openViewOnce,
-  toggleSearch, filterMessages, editMessage, pickReaction
+  deleteMessage, openViewOnce, openViewTwice,
+  toggleSearch, filterMessages, editMessage, pickReaction,
+  openQuickCamera, closeQuickCamera, flipCamera,
+  setPreviewMode, cancelCapturePreview, sendCapturePreview,
+  toggleGhostMenu, setGhostMode,
+  openSettings, closeSettings, selectTheme, selectBubbleColor, resetAppearance
 });

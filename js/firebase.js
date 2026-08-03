@@ -7,8 +7,8 @@
 // ════════════════════════════════════════════════════════════
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection,
-  query, where, orderBy, onSnapshot, serverTimestamp, addDoc, limit
+  getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, collection,
+  query, where, orderBy, onSnapshot, serverTimestamp, addDoc, limit, increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -24,8 +24,8 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
 export {
-  doc, setDoc, getDoc, getDocs, updateDoc, collection,
-  query, where, orderBy, onSnapshot, serverTimestamp, addDoc, limit
+  doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, collection,
+  query, where, orderBy, onSnapshot, serverTimestamp, addDoc, limit, increment
 };
 
 // Convierte apodo en un ID de documento limpio y único

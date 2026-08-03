@@ -29,4 +29,3 @@ export async function uploadToCloudinary(file, filename) {
   const data = await res.json();
   return data.secure_url;
 }
-
